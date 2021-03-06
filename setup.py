@@ -18,21 +18,23 @@ import setuptools
 
 name = "aitk"
 
-with open("README.md", "r") as fh:
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(HERE, "README.md"), "r") as fh:
     long_description = fh.read()
 
 setup_args = dict(
     name=name,
-    version="1.0.1",
+    version="1.0.2",
     url="https://github.com/ArtificialIntelligenceToolkit/%s" % name,
     author="Douglas Blank",
     description="Python tools for AI",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
-        "aitk.robots>=0.7.4",
-        "aitk.networks>=0.2.4",
-        "aitk.utils>=0.0.4"
+        "aitk.robots>=0.7.5",
+        "aitk.networks>=0.2.5",
+        "aitk.utils>=0.0.5"
     ],
     python_requires=">=3.6",
     license="BSD-3-Clause",
