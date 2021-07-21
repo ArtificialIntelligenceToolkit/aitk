@@ -8,9 +8,9 @@ The code and essays are designed to require as few computing resources as necess
 
 ## Authors
 
-* [Lisa Meeden](https://www.cs.swarthmore.edu/~meeden/) - Professor in the Computer Science Department at Swarthmore College
-* [Jim Marshall](http://science.slc.edu/~jmarshall/) - Professor in the Computer Science Department at Sarah Lawrence College
 * [Douglas Blank](https://cs.brynmawr.edu/~dblank/) - Emeritus Professor of Computer Science, Bryn Mawr College; Head of Research at [Comet.ml](https://comet.ml/)
+* [Jim Marshall](http://science.slc.edu/~jmarshall/) - Professor in the Computer Science Department at Sarah Lawrence College
+* [Lisa Meeden](https://www.cs.swarthmore.edu/~meeden/) - Professor in the Computer Science Department at Swarthmore College
 
 ## Contributors
 
