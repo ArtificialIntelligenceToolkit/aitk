@@ -22,8 +22,10 @@ Please feel free to contribute to this collection: https://github.com/Artificial
 
 Each of the following Jupyter Notebooks is designed to be read and executed either by itself, or in combination with the other essays. You can read and execute in the following order, or jump around between them, following a path of your own interests. The essays are designed to be read and executed interactively.
 
-1. [Evolving Robot Control](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/EvolvingRobotControl.ipynb) - topics covered include `the Genetic Algorithm`, `Robot control`
-2. [Structure of Convolutional Neural Networks](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Structure_of_Convolutional_Neural_Networks.ipynb) - topics covered include `Convolutional Neural Networks`
+* [Braitenberg Vehicles](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Braitenberg_Vehicles.ipynb)
+* [What is it like to be a robot?](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipynb)
+* [Evolving Robot Control](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/EvolvingRobotControl.ipynb) - topics covered include `the Genetic Algorithm`, `Robot control`
+* [Structure of Convolutional Neural Networks](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Structure_of_Convolutional_Neural_Networks.ipynb) - topics covered include `Convolutional Neural Networks`
 
 ## Python tools
 
