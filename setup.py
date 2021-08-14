@@ -25,7 +25,7 @@ with open(os.path.join(HERE, "README.md"), "r") as fh:
 
 setup_args = dict(
     name=name,
-    version="1.0.27",
+    version="1.0.28",
     url="https://github.com/ArtificialIntelligenceToolkit/%s" % name,
     author="Douglas Blank",
     description="Python tools for AI",
@@ -33,7 +33,7 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     install_requires=[
         "aitk.algorithms>=0.2.1",
-        "aitk.robots>=0.9.37",
+        "aitk.robots>=0.9.38",
         "aitk.networks>=0.5.0",
         "aitk.utils>=0.6.1"
     ],
