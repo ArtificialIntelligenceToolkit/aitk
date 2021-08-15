@@ -33,3 +33,10 @@ Topics covered include `Convolutional Neural Networks`.
 * [Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robot_Memory.ipynb)
 
 Topics covered include `Memory`, `Embodiment`.
+
+## Programming a Chess Player
+
+* [Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Programming_a_Chess_Player.ipynb)
+
+Topics covered include `symbolic computation`, `static analysis`.
+
