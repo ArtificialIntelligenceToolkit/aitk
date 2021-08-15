@@ -15,8 +15,8 @@ Topics covered include simple `Robot control`.
 ## What is it like to be a robot?
 
 * [Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipynb)
-* [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?filepath=notebooks/To_be_a_robot.ipyn)
-* [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipyn)
+* [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?filepath=notebooks/To_be_a_robot.ipynb)
+* [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipynb)
 
 Topics covered include `Philosophy of mind`, `Embodiment`.
 
