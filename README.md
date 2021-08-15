@@ -20,12 +20,7 @@ Please feel free to contribute to this collection: https://github.com/Artificial
 
 ## Computational Essays
 
-Each of the following Jupyter Notebooks is designed to be read and executed either by itself, or in combination with the other essays. You can read and execute in the following order, or jump around between them, following a path of your own interests. The essays are designed to be read and executed interactively.
-
-* [Braitenberg Vehicles](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Braitenberg_Vehicles.ipynb) topics covered include simple `Robot control`
-* [What is it like to be a robot?](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipynb) topics covered include `Philosophy of mind`, `Embodiment`
-* [Evolving Robot Control](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/EvolvingRobotControl.ipynb) - topics covered include `Genetic Algorithms`, `Robot control`
-* [Structure of Convolutional Neural Networks](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Structure_of_Convolutional_Neural_Networks.ipynb) - topics covered include `Convolutional Neural Networks`
+Each computational essay is described at [Computational Essays](https://github.com/ArtificialIntelligenceToolkit/aitk/ComputationalEssays.md).
 
 ## Python tools
 
@@ -37,6 +32,6 @@ Each of the following Jupyter Notebooks is designed to be read and executed eith
   * [aitk.networks](https://github.com/ArtificialIntelligenceToolkit/aitk.networks/) - Python package for constructing and visualizing Keras deep learning models
   * [aitk.utils](https://github.com/ArtificialIntelligenceToolkit/aitk.utils/) - Python package for common utilities
 
-In addition, there is a related repository for large datasets:
+## AITK Community
 
-* [aitk.datasets](https://github.com/ArtificialIntelligenceToolkit/aitk.datasets/) - repsoitory for large datasets for use in above Python packages
+For questions and comments, please use https://github.com/ArtificialIntelligenceToolkit/aitk/discussions/
