@@ -20,7 +20,7 @@ Please feel free to contribute to this collection: https://github.com/Artificial
 
 ## Computational Essays
 
-Each computational essay is described at [Computational Essays](https://github.com/ArtificialIntelligenceToolkit/aitk/ComputationalEssays.md).
+Each computational essay is described at [Computational Essays](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/ComputationalEssays.md).
 
 ## Python tools
 
