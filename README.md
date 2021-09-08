@@ -32,6 +32,35 @@ Each computational essay is described at [Computational Essays](https://github.c
   * [aitk.networks](https://github.com/ArtificialIntelligenceToolkit/aitk.networks/) - Python package for constructing and visualizing Keras deep learning models
   * [aitk.utils](https://github.com/ArtificialIntelligenceToolkit/aitk.utils/) - Python package for common utilities
 
+### Python Installation
+
+We recommend using `miniconda` for running Jupyter Notebooks locally on your computer. However, you can also skip this and run the Computational Essays on other services, such as Google's Colab. To use `miniconda`:
+
+1. First install [miniconda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
+2. Next, activate your base environment: `source ~/miniconda/bin/activate`
+3. Create a Python 3.8 conda environment: `conda create --name py38 python=3.8` 
+4. Activate it: `conda activate py38`
+
+You only need to do step 1 once. To get out of conda, back to your regular system:
+
+* `conda deactivate` (will get out of py38)
+* `conda deactivate` (will get out of base environment)
+
+### Software Installation
+
+After activating your conda environment:
+
+1. `pip install "aitk.robots[jupyter]"` (installs all of the aitk.robots requirements to run in Jupyter Lab 3.0)
+2. `pip install pandas tensorflow numpy matplotlib tqdm ipycanvas` (some things you might want)
+
+#### Jupyter Installation
+
+If you want to work in notebooks and jupyter lab:
+
+1. `pip install jupyterlab`  
+2. `jupyter labextension install @jupyter-widgets/jupyterlab-manager ipycanvas`
+3. `jupyter lab` starts it up, opens browser window
+
 ## AITK Community
 
 For questions and comments, please use https://github.com/ArtificialIntelligenceToolkit/aitk/discussions/
