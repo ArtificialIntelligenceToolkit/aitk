@@ -6,7 +6,7 @@ Each of the following Jupyter Notebooks is designed to be read and executed eith
 
 ## Braitenberg Vehicles
 
-* [Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Braitenberg_Vehicles.ipynb) 
+* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Braitenberg_Vehicles.ipynb) 
 * [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?filepath=notebooks/Braitenberg_Vehicles.ipynb)
 * [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Braitenberg_Vehicles.ipynb)
 
@@ -20,7 +20,7 @@ coupled with its environment.
 
 ## What is it like to be a robot?
 
-* [Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipynb)
+* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipynb)
 * [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?filepath=notebooks/To_be_a_robot.ipynb)
 * [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipynb)
 
@@ -34,7 +34,7 @@ simulated world.
 
 ## Evolving Robot Control
 
-* [Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/EvolvingRobotControl.ipynb)
+* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/EvolvingRobotControl.ipynb)
 * [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?filepath=notebooks/EvolvingRobotControl.ipynb)
 * [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/EvolvingRobotControl.ipynb)
 
@@ -44,7 +44,7 @@ Topics covered include `Genetic Algorithm`, `Robot control`.
 
 ## Structure of Convolutional Neural Networks
 
-* [Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Structure_of_Convolutional_Neural_Networks.ipynb)
+* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Structure_of_Convolutional_Neural_Networks.ipynb)
 * [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?filepath=notebooks/Structure_of_Convolutional_Neural_Networks.ipynb)
 * [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Structure_of_Convolutional_Neural_Networks.ipynb)
 
@@ -54,7 +54,7 @@ Topics covered include `Convolutional Neural Networks`.
 
 ## Robot Memory
 
-* [Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robot_Memory.ipynb)
+* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robot_Memory.ipynb)
 * [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?filepath=notebooks/Robot_Memory.ipynb)
 * [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robot_Memory.ipynb)
 
@@ -64,10 +64,10 @@ Topics covered include `Memory`, `Embodiment`.
 
 ## Programming a Chess Player
 
-* [Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Programming_a_Chess_Player.ipynb)
+* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Programming_a_Chess_Player.ipynb)
 * [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?filepath=notebooks/Programming_a_Chess_Player.ipynb)
 * [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Programming_a_Chess_Player.ipynb)
 
 Topics covered include `symbolic computation`, `static analysis`.
 
-> In this essay, we build a chess-playing program.
+> In this essay, we build a chess-playing program from scratch.
