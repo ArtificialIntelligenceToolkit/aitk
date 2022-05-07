@@ -37,6 +37,7 @@ setup_args = dict(
         "aitk.networks>=0.5.1",
         "aitk.utils>=0.6.5",
     ],
+    packages=[],
     extras_require={"jupyter": ["ipycanvas", "scipy", "pandas"]},
     python_requires=">=3.6",
     license="BSD-3-Clause",
