@@ -1,0 +1,216 @@
+
+{
+    "boundary_wall": true,
+    "boundary_wall_color": "#800080FF",
+    "boundary_wall_width": 1,
+    "ground_color": "#008000FF",
+    "height": 250,
+    "robots": 
+    [
+        {
+            "body": 
+            [
+                ["polygon", null, 
+                    [
+                        [4.17, 5], 
+                        [4.17, 6.67], 
+                        [5.83, 5.83], 
+                        [5.83, 5], 
+                        [7.5, 5], 
+                        [7.5, -5], 
+                        [5.83, -5], 
+                        [5.83, -5.83], 
+                        [4.17, -6.67], 
+                        [4.17, -5], 
+                        [-4.17, -5], 
+                        [-4.17, -6.67], 
+                        [-5.83, -5.83], 
+                        [-6.67, -5], 
+                        [-7.5, -4.17], 
+                        [-7.5, 4.17], 
+                        [-6.67, 5], 
+                        [-5.83, 5.83], 
+                        [-4.17, 6.67], 
+                        [-4.17, 5]
+                    ]
+                ], 
+                ["rectangle", "black", 
+                    [-3.33, -7.67, 6.33, 1.67
+                    ]
+                ], 
+                ["rectangle", "black", 
+                    [-3.33, 6, 6.33, 1.67
+                    ]
+                ],
+              ["polygon", "black", [[0, 0], [-2, 2], [2, 0], [-2, -2]]]
+            ],
+            "color": "#FF0000FF",
+            "devices": 
+            [
+                {
+                    "fov": 30,
+                    "colorsFadeWithDistance": 1.0,
+                    "height": 32,
+                    "reflectGround": true,
+                    "reflectSky": false,
+                    "sizeFadeWithDistance": 0.8,
+                    "class": "Camera",
+                    "width": 64
+                }, 
+                {
+                    "a": 0,
+                    "max": 100,
+                    "position": 
+                    [6, 0],
+                    "class": "RangeSensor",
+                    "width": 0
+                }, 
+                {
+                    "a": 0,
+                    "max": 20,
+                    "position": 
+                    [6, 6],
+                    "class": "RangeSensor",
+                    "width": 57.3
+                }, 
+                {
+                    "a": 0,
+                    "max": 20,
+                    "position": 
+                    [6, -6],
+                    "class": "RangeSensor",
+                    "width": 57.3
+                }
+            ],
+            "a": 180,
+            "height": 0.23,
+            "image_data": [],
+            "name": "Red",
+            "tva": 0,
+            "tvx": 0,
+            "tvy": 0,
+            "va": 0,
+            "va_max": 2.827433,
+            "va_ramp": 1,
+            "vx": 0,
+            "vx_max": 2,
+            "vx_ramp": 1,
+            "vy": 0,
+            "vy_max": 2,
+            "vy_ramp": 1,
+            "x": 430,
+            "y": 50
+        }, 
+        {
+            "body": 
+            [
+                ["polygon", null, 
+                    [
+                        [4.17, 5], 
+                        [4.17, 6.67], 
+                        [5.83, 5.83], 
+                        [5.83, 5], 
+                        [7.5, 5], 
+                        [7.5, -5], 
+                        [5.83, -5], 
+                        [5.83, -5.83], 
+                        [4.17, -6.67], 
+                        [4.17, -5], 
+                        [-4.17, -5], 
+                        [-4.17, -6.67], 
+                        [-5.83, -5.83], 
+                        [-6.67, -5], 
+                        [-7.5, -4.17], 
+                        [-7.5, 4.17], 
+                        [-6.67, 5], 
+                        [-5.83, 5.83], 
+                        [-4.17, 6.67], 
+                        [-4.17, 5]
+                    ]
+                ], 
+                ["rectangle", "black", 
+                    [-3.33, -7.67, 6.33, 1.67
+                    ]
+                ], 
+                ["rectangle", "black", 
+                    [-3.33, 6, 6.33, 1.67
+                    ]
+                ],
+              ["polygon", "black", [[0, 0], [-2, 2], [2, 0], [-2, -2]]]
+            ],
+            "color": "#0000FFFF",
+            "devices": 
+            [
+                {
+                    "fov": 30,
+                    "colorsFadeWithDistance": 1.0,
+                    "height": 32,
+                    "reflectGround": true,
+                    "reflectSky": false,
+                    "sizeFadeWithDistance": 0.8,
+                    "class": "Camera",
+                    "width": 64
+                }, 
+                {
+                    "a": 0,
+                    "max": 100,
+                    "position": 
+                    [6, 0],
+                    "class": "RangeSensor",
+                    "width": 0
+                }, 
+                {
+                    "a": 0,
+                    "max": 20,
+                    "position": 
+                    [6, 6],
+                    "class": "RangeSensor",
+                    "width": 57.3
+                }, 
+                {
+                    "a": 0,
+                    "max": 20,
+                    "position": 
+                    [6, -6],
+                    "class": "RangeSensor",
+                    "width": 57.3
+                }
+            ],
+            "a": 0,
+            "height": 0.23,
+            "image_data": [],
+            "name": "Blue",
+            "tva": 0,
+            "tvx": 0,
+            "tvy": 0,
+            "va": 0,
+            "va_max": 2.827433,
+            "va_ramp": 1,
+            "vx": 0,
+            "vx_max": 2,
+            "vx_ramp": 1,
+            "vy": 0,
+            "vy_max": 2,
+            "vy_ramp": 1,
+            "x": 30,
+            "y": 50
+        }],
+    "scale": 3,
+    "seed": 0,
+    "walls": 
+    [
+        {
+            "color": "#000000FF",
+            "p1": 
+            {
+                "x": 100,
+                "y": 0
+            },
+            "p2": 
+            {
+                "x": 110,
+                "y": 110
+            }
+        }],
+    "width": 500
+}
