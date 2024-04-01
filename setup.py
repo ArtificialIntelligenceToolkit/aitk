@@ -44,7 +44,11 @@ setup_args = dict(
     description="Python tools for AI",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    install_requires=[],
+    package_data={
+        "aitk.utils": ["fonts/*.ttf"],
+        "aitk.robots": ["worlds/*.json", "worlds/*.png"],
+    },
+    install_requires=["Pillow", "ipywidgets", "tqdm", "numpy", "matplotlib"],
     packages=setuptools.find_packages(),
     python_requires=">=3.9",
     license="BSD-3-Clause",

@@ -65,7 +65,10 @@ class PILBackend(Backend):
         )
         self.draw = ImageDraw.Draw(self.image, "RGBA")
         if self.font:
-            text_width, text_height = self.draw.textsize("0", self.font)
+            (left, top, right, bottom) = self.draw.textbbox((0, 0), "0", font=self.font, anchor="ls")
+            text_width = right - left
+            text_height = top - bottom
+            #text_width, text_height = self.draw.textsize("0", self.font)
             self.char_width = text_width / self._scale
             self.char_height = text_height / self._scale
         else:
