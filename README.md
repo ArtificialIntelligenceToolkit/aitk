@@ -27,10 +27,10 @@ Each computational essay is described at [Computational Essays](https://github.c
 `aitk` is Python package containing the following modules.
 
 * [aitk]() - top level package
-  * [aitk.robots](https://github.com/ArtificialIntelligenceToolkit/docs/robots/) - for exploring simulated mobile robots, with cameras and sensors
-  * [aitk.algorithms](https://github.com/ArtificialIntelligenceToolkit/docs/algorithms/) - for exploring algorithms
-  * [aitk.networks](https://github.com/ArtificialIntelligenceToolkit/docs/networks/) - for constructing and visualizing Keras deep learning models
-  * [aitk.utils](https://github.com/ArtificialIntelligenceToolkit/docs/utils/) - for common utilities
+  * [aitk.robots](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/master/docs/robots) - for exploring simulated mobile robots, with cameras and sensors
+  * [aitk.algorithms](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/master/docs/algorithms/) - for exploring algorithms
+  * [aitk.networks](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/master/docs/networks/) - for constructing and visualizing Keras deep learning models
+  * [aitk.utils](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/master/docs/utils/) - for common utilities
 
 ### Python Installation
 
