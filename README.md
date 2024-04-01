@@ -12,12 +12,6 @@ The code and essays are designed to require as few computing resources as necess
 * [Jim Marshall](http://science.slc.edu/~jmarshall/) - Professor in the Computer Science Department at Sarah Lawrence College
 * [Lisa Meeden](https://www.cs.swarthmore.edu/~meeden/) - Professor in the Computer Science Department at Swarthmore College
 
-## Contributors
-
-Please feel free to contribute to this collection: https://github.com/ArtificialIntelligenceToolkit/aitk
-
-* Your Name Here
-
 ## Computational Essays
 
 Each computational essay is described at [Computational Essays](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/ComputationalEssays.md).
