@@ -1,0 +1,98 @@
+
+{
+    "boundary_wall": true,
+    "boundary_wall_color": "#800080FF",
+    "boundary_wall_width": 1,
+    "bulbs": [],
+    "ground_color": "#008000FF",
+    "ground_image_filename": "soccer-780x496.png",
+    "height": 496,
+    "robots": 
+    [
+        {
+            "body": 
+            [
+                ["polygon", null, 
+                    [
+                        [4.17, 5], 
+                        [4.17, 6.67], 
+                        [5.83, 5.83], 
+                        [5.83, 5], 
+                        [7.5, 5], 
+                        [7.5, -5], 
+                        [5.83, -5], 
+                        [5.83, -5.83], 
+                        [4.17, -6.67], 
+                        [4.17, -5], 
+                        [-4.17, -5], 
+                        [-4.17, -6.67], 
+                        [-5.83, -5.83], 
+                        [-6.67, -5], 
+                        [-7.5, -4.17], 
+                        [-7.5, 4.17], 
+                        [-6.67, 5], 
+                        [-5.83, 5.83], 
+                        [-4.17, 6.67], 
+                        [-4.17, 5]
+                    ]
+                ], 
+                ["rectangle", "black", 
+                    [-3.33, -7.67, 6.33, 1.67
+                    ]
+                ], 
+                ["rectangle", "black", 
+                    [-3.33, 6, 6.33, 1.67
+                    ]
+                ], 
+                ["polygon", "black", 
+                    [
+                        [0, 0], 
+                        [-2, 2], 
+                        [2, 0], 
+                        [-2, -2]
+                    ]
+                ]
+            ],
+            "color": "#FF0000FF",
+            "devices": 
+            [
+                {
+                    "fov": 30,
+                    "class": "Camera",
+                    "colorsFadeWithDistance": 0.9,
+                    "height": 32,
+                    "max_range": 1000,
+                    "reflectGround": true,
+                    "reflectSky": false,
+                    "sizeFadeWithDistance": 3,
+                    "width": 64
+                }],
+            "a": 0,
+            "do_trace": true,
+            "height": 0.25,
+            "image_data": [],
+            "name": "Scribbie",
+            "state": 
+            {
+
+            },
+            "tva": 0,
+            "tvx": 0,
+            "tvy": 0,
+            "va": 0,
+            "va_max": 2.827433,
+            "va_ramp": 1,
+            "vx": 0,
+            "vx_max": 2,
+            "vx_ramp": 1,
+            "vy": 0,
+            "vy_max": 2,
+            "vy_ramp": 1,
+            "x": 50,
+            "y": 248
+        }],
+    "scale": 3,
+    "seed": 7053746,
+    "walls": [],
+    "width": 780
+}
