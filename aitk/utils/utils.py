@@ -249,7 +249,7 @@ def progress_bar(range, show_progress=True, progress_type="tqdm"):
         return range
 
 def images_to_movie(*frames, movie_name="aitk_movie", start=0, stop=None,
-                    step=0.1, loop=0, duration=100, mp4=True):
+                    loop=0, duration=100, mp4=True):
     """
     Save as animated gif and optionally mp4; show with controls.
     loop - 0 means continually
@@ -270,9 +270,7 @@ def images_to_movie(*frames, movie_name="aitk_movie", start=0, stop=None,
     )
     if mp4:
         retval = os.system(
-            """ffmpeg -y -v quiet -nostats -hide_banner -loglevel error -i {0}.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {0}.mp4""".format(
-                movie_name
-            )
+            """ffmpeg -y -v quiet -nostats -hide_banner -loglevel error -i {0}.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {0}.mp4""".format(movie_name)
         )
         if retval != 0:
             print(
