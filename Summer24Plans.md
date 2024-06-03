@@ -1,5 +1,5 @@
 # Getting started the first week
-* 3Blue1Brown channel, watch videos that introduce neural networks
+* [3Blue1Brown channel](https://www.youtube.com/c/3blue1brown), watch videos that introduce neural networks
 * The latest version of tensorflow has broken some aspects of aitk
 * Have students go through and try every notebook to see what works and what doesn't
 * Have them start to look throught he code base for how it is orgainized
