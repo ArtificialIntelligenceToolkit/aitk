@@ -1338,7 +1338,7 @@ class Robot:
                     backend.text(
                         text,
                         self.x + (pad + box_pad),
-                        self.y - self.world._backend.char_height - box_pad,
+                        self.y - (pad + box_pad),
                     )
             else:  # left
                 if half == 1:  # bottom
@@ -1347,7 +1347,7 @@ class Robot:
                     backend.text(
                         text,
                         self.x - pad - width - box_pad,
-                        self.y - self.world._backend.char_height - box_pad,
+                        self.y - (pad + box_pad),
                     )
 
 
