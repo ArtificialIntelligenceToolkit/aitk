@@ -23,25 +23,9 @@ and other Python environments.
 For the core operations, you will need to install just aitk.robots:
 
 ```shell
-pip install aitk.robots
-```
-
-To use the Jupyter enhancements, you'll also need the browser-based
-extensions. You can install those with:
-
-```
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
-```
-
-If not in a conda environment, then you will also need to:
-
-```
-jupyter nbextension enable --py widgetsnbextension
+pip install aitk
 ```
 
 For additional information, please see:
 
 * [aitk](https://github.com/ArtificialIntelligenceToolkit/aitk)
-* [aitk.robots](https://github.com/ArtificialIntelligenceToolkit/aitk.robots)
-* [aitk.networks](https://github.com/ArtificialIntelligenceToolkit/aitk.networks)
-* [aitk.utils](https://github.com/ArtificialIntelligenceToolkit/aitk.utils)
