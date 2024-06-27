@@ -1,14 +1,44 @@
 # Computational Essays on Artificial Intelligence
 
-This is a collection of essays meant to be computational executed. More details about this project can be found in the [README](./README.md).
+This is a collection of essays that are meant to be computationally executed. More details about this project can be found in the [README](./README.md).
 
-Each of the following Jupyter Notebooks is designed to be read and executed either by itself, or in combination with the other essays. You can read and execute in the following order, or jump around between them, following a path of your own interests. The essays are designed to be read and executed interactively.
+Each of the following notebooks contains both explanation and code and are designed to be read and executed interactively to test out the concepts being explained. You can explore these notebooks in any order depending on your interests. 
 
-## Braitenberg Vehicles
+## Understanding Neural Networks 
 
-* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Braitenberg_Vehicles.ipynb) 
-* [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?urlpath=lab/tree/notebooks/Braitenberg_Vehicles.ipynb)
-* [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Braitenberg_Vehicles.ipynb)
+### Basic Neural Nets
+
+Topics covered include an `introduction to neural networks` and `machine learning`.
+
+> This essay explores a small dataset of handwritten digits. You will build and train a simple neural network to correctly classify the digits 0-9, and see its limitations when applied to noisy images.
+
+### Categorizing Faces
+
+Topics covered include `supervised learning` and `visualizing weights`.
+
+> This essay explores the faces dataset created in conjunction with Tom Mitchell's 1977 book entitled *Machine Learning*. After training the network to recognize whether a person is wearing sunglasses or facing a particular direction, you will visualize what aspects of each image the network has learned to focus on to correctly classify the image.
+
+### Analyzing Hidden Representations
+
+Topics covered include `hidden space` and `Principal Components Analysis (PCA)`.
+
+> This essay returns to the small dataset of handwritten digits covered in the notebook on Basic Neural Nets. Here, you will visualize the hidden layer representations prior to training and after training using Principal Components Analysis.
+
+### Data Manipulation
+
+Topics covered include `composition of data` and `biased outcomes`.
+
+> This essay explores how the composition of the training data can lead to biased outcomes. It focuses on a subset of a larger dataset of handwritten digits from MNIST. By manipulating the numbers of 4's vs 5's in the dataset, it demonstrates that when the imbalance is large enough, the network struggles recognizing the underrepresented class. 
+
+###  Structure of Convolutional Neural Networks
+
+Topics covered include `Convolutional Neural Networks`.
+
+> In this essay, we deep-dive into the functioning of a Convolutional Neural Network that is designed for processing two-dimensional image data.
+
+## Robotics
+
+### Braitenberg Vehicles
 
 Topics covered include simple `Robot control`.
 
@@ -18,11 +48,7 @@ Psychology*. Although this essay doesn't explore Machine Learning, it
 does offer some insight into how an agent's behavior could be tightly
 coupled with its environment.
 
-## What is it like to be a robot?
-
-* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipynb)
-* [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?urlpath=lab/tree/notebooks/To_be_a_robot.ipynb)
-* [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/To_be_a_robot.ipynb)
+### What is it like to be a robot?
 
 Topics covered include `Philosophy of mind`, `Embodiment`, `umwelt`.
 
@@ -32,42 +58,10 @@ a robot?" Here, you explore first-hand what it is like to sense the
 world from a robot's perspective, and make your way through a
 simulated world.
 
-## Evolving Robot Control
+## Components of Large Language Models
 
-* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/EvolvingRobotControl.ipynb)
-* [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?urlpath=lab/tree/notebooks/EvolvingRobotControl.ipynb)
-* [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/EvolvingRobotControl.ipynb)
+### Word Embedding
 
-Topics covered include `Genetic Algorithm`, `Robot control`.
+Topics covered include how `word embeddings` are learned.
 
-> In this essay, we explore the Genetic Algorithm to evolve a Robot control neural network that allows a robot to move about in a simulated environment.
-
-## Structure of Convolutional Neural Networks
-
-* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Structure_of_Convolutional_Neural_Networks.ipynb)
-* [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?urlpath=lab/tree/notebooks/Structure_of_Convolutional_Neural_Networks.ipynb)
-* [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Structure_of_Convolutional_Neural_Networks.ipynb)
-
-Topics covered include `Convolutional Neural Networks`.
-
-> In this essay, we deep-dive into the functioning of a Convolutional Neural Network.
-
-## Robot Memory
-
-* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robot_Memory.ipynb)
-* [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?urlpath=lab/tree/notebooks/Robot_Memory.ipynb)
-* [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robot_Memory.ipynb)
-
-Topics covered include `Memory`, `Embodiment`.
-
-> Does a robot need memory at all? Maybe not. In this essay we explore the idea that a robot can learn to use the world as its memory.
-
-## Programming a Chess Player
-
-* [View Notebook](https://nbviewer.jupyter.org/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Programming_a_Chess_Player.ipynb)
-* [Launch in Binder](https://mybinder.org/v2/gh/ArtificialIntelligenceToolkit/aitk/HEAD?urlpath=lab/tree/notebooks/Programming_a_Chess_Player.ipynb)
-* [Launch in Google's Colab](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Programming_a_Chess_Player.ipynb)
-
-Topics covered include `symbolic computation`, `static analysis`.
-
-> In this essay, we build a chess-playing program from scratch.
+> This essay explores how a rich representation of a word's meaning can be inferred soley from its associations with other words. A stripped down language with just 27 words and a limited set of templates is examined. 
