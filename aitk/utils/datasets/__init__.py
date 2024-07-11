@@ -84,6 +84,8 @@ def get_dataset(dataset=None):
         from .cmu_faces import get_half as get
     elif dataset == "cmu-faces-quarter":
         from .cmu_faces import get_quarter as get
+    elif data == "noise_and_embeddings":
+        from .noise_and_embeddings import get_images
     else:
         raise Exception("unknown dataset name")
     return get()
