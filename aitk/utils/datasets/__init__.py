@@ -32,14 +32,14 @@ def get_dataset(dataset=None):
             "dogs", "cats", "dogs-vs-cats-100", "gridfonts",
             "figure-ground-a", "cmu-faces", "cmu-faces-full",
             "cmu-faces-half", "cmu-faces-quarter",
-            "validate_6x6"
+            "validate_6x6", "nanoGPT_shakespeare"
 
     Examples:
     ```python
     >>> get_dataset()
     ["cats", "digits6x6", "dogs", "dogs-vs-cats", "dogs-vs-cats-100",
      "gridfonts", "figure-ground-a", "cmu-faces", "cmu-faces-full",
-     "cmu-faces-half", "cmu-faces-quarter", "validate_6x6"]
+     "cmu-faces-half", "cmu-faces-quarter", "validate_6x6", "nanoGPT_shakespeare"]
 
     >>> dataset = get_dataset("dogs")
     ```
@@ -58,6 +58,7 @@ def get_dataset(dataset=None):
             "cmu-faces-full",
             "cmu-faces-half",
             "cmu-faces-quarter",
+            "nanoGPT_shakespeare",
         ]
     get = None
     if dataset == "digits6x6":
@@ -86,6 +87,8 @@ def get_dataset(dataset=None):
         from .cmu_faces import get_quarter as get
     elif data == "noise_and_embeddings":
         from .noise_and_embeddings import get_images
+    elif dataset == "nanoGPT_shakespeare":
+        from .nanoGPT_shakespeare import get_dataset
     else:
         raise Exception("unknown dataset name")
     return get()
