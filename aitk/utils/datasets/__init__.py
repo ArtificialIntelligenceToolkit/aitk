@@ -32,14 +32,15 @@ def get_dataset(dataset=None):
             "dogs", "cats", "dogs-vs-cats-100", "gridfonts",
             "figure-ground-a", "cmu-faces", "cmu-faces-full",
             "cmu-faces-half", "cmu-faces-quarter",
-            "validate_6x6", "nanoGPT_shakespeare"
+            "validate_6x6", "nanoGPT_shakespeare", "flowers",
 
     Examples:
     ```python
     >>> get_dataset()
     ["cats", "digits6x6", "dogs", "dogs-vs-cats", "dogs-vs-cats-100",
      "gridfonts", "figure-ground-a", "cmu-faces", "cmu-faces-full",
-     "cmu-faces-half", "cmu-faces-quarter", "validate_6x6", "nanoGPT_shakespeare"]
+     "cmu-faces-half", "cmu-faces-quarter", "validate_6x6",
+     "nanoGPT_shakespeare", "flowers"]
 
     >>> dataset = get_dataset("dogs")
     ```
@@ -52,6 +53,7 @@ def get_dataset(dataset=None):
             "dogs-vs-cats",
             "dogs-vs-cats-100",
             "gridfonts",
+            "flowers",
             "figure-ground-a",
             "validate_6x6",
             "cmu-faces",
@@ -85,8 +87,8 @@ def get_dataset(dataset=None):
         from .cmu_faces import get_half as get
     elif dataset == "cmu-faces-quarter":
         from .cmu_faces import get_quarter as get
-    elif data == "noise_and_embeddings":
-        from .noise_and_embeddings import get_images as get
+    elif dataset == "flowers":
+        from .flowers import get
     elif dataset == "nanoGPT_shakespeare":
         from .nanoGPT_shakespeare import get_dataset as get
     else:
