@@ -86,9 +86,9 @@ def get_dataset(dataset=None):
     elif dataset == "cmu-faces-quarter":
         from .cmu_faces import get_quarter as get
     elif data == "noise_and_embeddings":
-        from .noise_and_embeddings import get_images
+        from .noise_and_embeddings import get_images as get
     elif dataset == "nanoGPT_shakespeare":
-        from .nanoGPT_shakespeare import get_dataset
+        from .nanoGPT_shakespeare import get_dataset as get
     else:
         raise Exception("unknown dataset name")
     return get()
