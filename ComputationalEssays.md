@@ -4,7 +4,7 @@ This collection of essays is meant to be computationally executed. More details 
 
 Each of the notebooks contains both explanation and code. The notebooks are designed to be read and executed interactively to test out the concepts being explained. Within each sub-section we have a suggested ordering for exploring the available notebooks.
 
-If you have never used a Jupyter notebook before, we recommend beginning with the IntroToJupyterNotebook.ipynb notebook.
+If you have never used a Jupyter notebook before, we recommend beginning with the [IntroToJupyterNotebook.ipynb](https://colab.research.google.com/github/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/IntroToJupyterNotebook.ipynb) notebook.
 
 ## Neural Networks 
 
