@@ -2,38 +2,38 @@
 
 This collection of essays is meant to be computationally executed. More details about this project can be found in the [README](./README.md). You can find all of these essays in the [notebooks folder.](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/master/notebooks)
 
-Each of the notebooks contains both explanation and code. The notebooks are designed to be read and executed interactively to test out the concepts being explained.  For each subsection, we have a suggested ordering for exploring the available notebooks. Our notebooks and the sequencing can be found in the [notebooks folder](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks) of this repo.
+Each of the notebooks contains both explanation and code. The notebooks are designed to be read and executed interactively to test out the concepts being explained.  For each subsection, we have a suggested ordering for exploring the available notebooks. Our notebooks and the sequencing can be found in the [notebooks folder](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/master/notebooks) of this repo.
 
-If you have never used a Jupyter notebook before, we recommend beginning with the [Intro To Jupyter Notebook](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/IntroToJupyterNotebook) essay. You can run these online using Google CoLab (click the Open in CoLab button at the top of the essay) or download them to run in JupyterLab on your computer.
+If you have never used a Jupyter notebook before, we recommend beginning with the [Intro To Jupyter Notebook](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/IntroToJupyterNotebook.ipynb) essay. You can run these online using Google CoLab (click the Open in CoLab button at the top of the essay) or download them to run in JupyterLab on your computer.
 
 ## Neural Networks 
 
-#### [Basic Neural Nets](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/NeuralNetworks/BasicNeuralNets.ipynb)
+#### [Basic Neural Nets](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/BasicNeuralNets.ipynb)
 
 Topics covered include an `introduction to neural networks` and `machine learning`.
 
 > This essay explores a small dataset of handwritten digits. You will build and train a simple neural network to correctly classify the digits 0-9, and see its limitations when applied to noisy images.
 
-#### [Categorizing Faces](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/NeuralNetworks/CategorizingFaces.ipynb)
+#### [Categorizing Faces](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/CategorizingFaces.ipynb)
 
 Topics covered include `supervised learning` and `visualizing weights`. [Open in CoLab.]
 
 > This essay explores the faces dataset created in conjunction with Tom Mitchell's 1977 book entitled *Machine Learning*. After training the network to recognize whether a person is wearing sunglasses or facing a particular direction, you will visualize the learned weights as an image to discover what aspects of the images the network has learned to focus on to perform its classification.
 
-#### [Data Manipulation](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/NeuralNetworks/DataManipulation.ipynb)
+#### [Data Manipulation](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/DataManipulation.ipynb)
 
 Topics covered include `composition of data` and `biased outcomes`.
 
 > This essay explores how the composition of the training data can lead to biased outcomes. It focuses on a subset of a larger dataset of handwritten digits from MNIST. By manipulating the numbers of 4's vs 5's in the dataset, it demonstrates that when the imbalance is large enough, the network struggles recognizing the underrepresented class. 
 
-#### [Analyzing Hidden Representations](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/NeuralNetworks/AnalyzingHiddenRepresentations.ipynb)
+#### [Analyzing Hidden Representations](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/AnalyzingHiddenRepresentations.ipynb)
 
 Topics covered include `hidden space` and `Principal Components Analysis (PCA)`.
 
 > This essay returns to the small dataset of handwritten digits covered in the notebook on Basic Neural Nets. Here, you will visualize the hidden layer representations prior to training and after training using Principal Components Analysis.
 
 
-####  [Structure of Convolutional Neural Networks](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/NeuralNetworks/StructureOfConvolutionalNeuralNetworks.ipynb)
+####  [Structure of Convolutional Neural Networks](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/StructureOfConvolutionalNeuralNetworks.ipynb)
 
 Topics covered include `Convolutional Neural Networks`.
 
@@ -41,31 +41,31 @@ Topics covered include `Convolutional Neural Networks`.
 
 ## Robotics
 
-#### [Braitenberg Vehicles](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/Robotics/BraitenbergVehicles.ipynb)
+#### [Braitenberg Vehicles](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/BraitenbergVehicles.ipynb)
 
 Topics covered include simple `Robot control`.
 
 > This essay explores some of the vehicles described by Valentino Braitenberg in his book entitled *Vehicles: Experiments in Synthetic Psychology*. Although this essay doesn't explore Machine Learning, it does offer some insight into how an agent's behavior could be tightly coupled with its environment.
 
-#### [What is it like to be a robot?](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/Robotics/WhatIsItLikeToBeARobot.ipynb)
+#### [What is it like to be a robot?](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/WhatIsItLikeToBeARobot.ipynb)
 
 Topics covered include `Philosophy of mind`, `Embodiment`, and `umwelt`.
 
 > Philosopher Thomas Nagel famously asked "What is it like to be a bat?" In this essay, we explore the question "What is it like to be a robot?" Here, you explore first-hand what it is like to sense the world from a robot's perspective, and make your way through a simulated world.
 
-#### [Demo Robots](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/Robotics/DemoRobots.ipynb)
+#### [Demo Robots](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/DemoRobots.ipynb)
 
 Topics covered include how to create a `world`, `robot`, and `controller` in AITK
 
 > This notebook demonstrates all of the key features of the AITK robotics tools.
 
-#### [Subsumption](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/Robotics/Subsumption.ipynb)
+#### [Subsumption](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/Subsumption.ipynb)
 
 Topics covered include Rodney Brooks' `subsumption architecture`
 
 > In 1986, MIT Roboticist Rodney Brooks proposed a real-time, reactive framework for controlling robots called the subsumption architecture, which is based on a hierarchical collection of layers. This notebook demonstrates an example of this framework applied to the task of a robot trying to find a light source. 
 
-#### [Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/Robotics/SeekLight.ipynb)
+#### [Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/SeekLight.ipynb)
 
 Topics covered a case-based controller
 
@@ -73,13 +73,13 @@ Topics covered a case-based controller
 
 ## Components of Large Language Models
 
-#### [Word Embedding](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/GenerativeAI/WordEmbedding.ipynb)
+#### [Word Embedding](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/WordEmbedding.ipynb)
 
 Topics covered include how `word embeddings` are learned.
 
 > This essay explores how a rich representation of a word's meaning can be inferred solely from its associations with other words. A stripped down language with just 27 words and a limited set of templates is examined. 
 
-#### [NanoGPT](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/GenerativeAI/NanoGPT.ipynb)
+#### [NanoGPT](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/NanoGPT.ipynb)
 
 Topics covered include `Large Language Models`
 
