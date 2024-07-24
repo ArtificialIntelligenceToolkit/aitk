@@ -2,7 +2,7 @@
 
 This collection of essays is meant to be computationally executed. More details about this project can be found in the [README](./README.md). You can find all of these essays in the [notebooks folder.](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/master/notebooks)
 
-Each of the notebooks contains both explanation and code. The notebooks are designed to be read and executed interactively to test out the concepts being explained. Within each sub-section we have a suggested ordering for exploring the available notebooks.
+Each of the notebooks contains both explanation and code. The notebooks are designed to be read and executed interactively to test out the concepts being explained.  For each subsection, we have a suggested ordering for exploring the available notebooks. Our notebooks and the sequencing can be found in the [notebooks folder](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks) of this repo.
 
 If you have never used a Jupyter notebook before, we recommend beginning with the [Intro To Jupyter Notebook](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/IntroToJupyterNotebook) essay. You can run these online using Google CoLab (click the Open in CoLab button at the top of the essay) or download them to run in JupyterLab on your computer.
 
@@ -63,7 +63,7 @@ Topics covered include how to create a `world`, `robot`, and `controller` in AIT
 
 Topics covered include Rodney Brooks' `subsumption architecture`
 
-> In 1986, MIT Roboticist Rodney Brooks proposed a real-time, reactive framework for contolling robots called the subsumption architecture, which is based on a hierarchical collection of layers. This notebook demonstrates an example of this framework applied to the task of a robot trying to find a light source. 
+> In 1986, MIT Roboticist Rodney Brooks proposed a real-time, reactive framework for controlling robots called the subsumption architecture, which is based on a hierarchical collection of layers. This notebook demonstrates an example of this framework applied to the task of a robot trying to find a light source. 
 
 #### [Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/Robotics/SeekLight.ipynb)
 
@@ -77,7 +77,7 @@ Topics covered a case-based controller
 
 Topics covered include how `word embeddings` are learned.
 
-> This essay explores how a rich representation of a word's meaning can be inferred soley from its associations with other words. A stripped down language with just 27 words and a limited set of templates is examined. 
+> This essay explores how a rich representation of a word's meaning can be inferred solely from its associations with other words. A stripped down language with just 27 words and a limited set of templates is examined. 
 
 #### [NanoGPT](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks/GenerativeAI/NanoGPT.ipynb)
 
