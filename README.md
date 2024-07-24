@@ -14,7 +14,7 @@ The code and essays are designed to require as few computing resources as necess
 
 ## Computational Essays
 
-Each computational essay is described at [Computational Essays](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/ComputationalEssays.md). Our computational essays and a suggested sequencing through the notebooks can be found in the [notebooks folder](https://www.google.com/url?q=https://github.com/ArtificialIntelligenceToolkit/aitk/tree/20973e79b6d33a1e3e6d829f5f7eec127afd65c7/notebooks&sa=D&source=docs&ust=1721761109108242&usg=AOvVaw3mMyxhFeq1HBWdlFDU_lAv) of this repo.
+Each computational essay is described at [Computational Essays](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/ComputationalEssays.md). Our computational essays and a suggested sequencing through the notebooks can be found in the [notebooks folder](https://github.com/ArtificialIntelligenceToolkit/aitk/tree/master/notebooks) of this repo.
 
 ## Artifical Intelligence Toolkit
 
