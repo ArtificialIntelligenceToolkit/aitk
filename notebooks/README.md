@@ -35,7 +35,7 @@ If you have never used a notebook before, please review our notebook **[Intro To
 >**[Demo Robots](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/DemoRobots.ipynb)**
 
 
-### Components of Large Language Models
+### Generative AI
 If you have not already, review the **[Basic Neural Nets](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/BasicNeuralNets.ipynb)** notebook 
 and **[Analyzing Hidden Representations](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/AnalyzingHiddenRepresentations.ipynb)** notebook before continuing on with this sequence.
 
