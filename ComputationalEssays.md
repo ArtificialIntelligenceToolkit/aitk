@@ -71,7 +71,7 @@ Topics covered a case-based controller
 
 > This notebook solves the same problem as the subsumption notebook, but does so using a case-based approach. The controller is tested on a series of more difficult worlds.
 
-## Components of Large Language Models
+## Generative AI
 
 #### [Word Embedding](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/WordEmbedding.ipynb)
 
@@ -84,3 +84,9 @@ Topics covered include how `word embeddings` are learned.
 Topics covered include `Large Language Models`
 
 > This essay demonstrates a small-scale LLM applied to all of Shakespeare's plays.
+
+#### [Transformer](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/Transformer.ipynb)
+
+Topics covered include `transformers` and `attention` withing LLMs.
+
+> This essay goes into much more detail about how LLMs operate using the same NanoGPT model trained on the works of Shakespeare.
