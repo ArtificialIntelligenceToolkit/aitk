@@ -87,6 +87,6 @@ Topics covered include `Large Language Models`
 
 #### [Transformer](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/Transformer.ipynb)
 
-Topics covered include `transformers` and `attention` withing LLMs.
+Topics covered include `transformers` and `attention` within LLMs.
 
 > This essay goes into much more detail about how LLMs operate using the same NanoGPT model trained on the works of Shakespeare.
