@@ -46,4 +46,4 @@ and **[Analyzing Hidden Representations](https://github.com/ArtificialIntelligen
 >**[NanoGPT](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/NanoGPT.ipynb)**
 
 #### Further:
->**[NanoGPT](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/Transformer.ipynb)**
+>**[Transformer](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/Transformer.ipynb)**
