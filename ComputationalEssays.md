@@ -85,6 +85,12 @@ Topics covered include `Large Language Models`
 
 > This essay demonstrates a small-scale LLM applied to all of Shakespeare's plays.
 
+#### [ImageGeneration](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/ImageGeneration.ipynb)
+
+Topics covered include `CLIP`, `Latent Diffusion`, `noising`, and `denoising`
+
+> This essay provides an overview of how image generation operates, and demonstrates noising and denoising of images. It also highlights some of the ethical concerns around image generation tools.
+
 #### [Transformer](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/Transformer.ipynb)
 
 Topics covered include `transformers` and `attention` within LLMs.
