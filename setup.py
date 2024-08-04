@@ -48,7 +48,7 @@ setup_args = dict(
         "aitk.utils": ["fonts/*.ttf"],
         "aitk.robots": ["worlds/*.json", "worlds/*.png"],
     },
-    install_requires=["Pillow", "ipywidgets", "tqdm", "numpy", "matplotlib"],
+    install_requires=["Pillow", "ipywidgets", "tqdm", "numpy<=1.26.4", "matplotlib", "tensorflow<=2.15.1"],
     packages=setuptools.find_packages(),
     python_requires=">=3.9",
     license="BSD-3-Clause",
