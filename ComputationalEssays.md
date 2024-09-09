@@ -16,7 +16,7 @@ Topics covered include an `introduction to neural networks` and `machine learnin
 
 #### [Categorizing Faces](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/CategorizingFaces.ipynb)
 
-Topics covered include `supervised learning` and `visualizing weights`. [Open in CoLab.]
+Topics covered include `supervised learning` and `visualizing weights`. 
 
 > This essay explores the faces dataset created in conjunction with Tom Mitchell's 1977 book entitled *Machine Learning*. After training the network to recognize whether a person is wearing sunglasses or facing a particular direction, you will visualize the learned weights as an image to discover what aspects of the images the network has learned to focus on to perform its classification.
 
@@ -67,7 +67,7 @@ Topics covered include Rodney Brooks' `subsumption architecture`
 
 #### [Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/SeekLight.ipynb)
 
-Topics covered a case-based controller
+Topics covered include a case-based controller
 
 > This notebook solves the same problem as the subsumption notebook, but does so using a case-based approach. The controller is tested on a series of more difficult worlds.
 
