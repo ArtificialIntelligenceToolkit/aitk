@@ -67,7 +67,7 @@ Topics covered include Rodney Brooks' `subsumption architecture`
 
 #### [Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/SeekLight.ipynb)
 
-Topics covered include a case-based controller
+Topics covered include a `case-based controller`
 
 > This notebook solves the same problem as the subsumption notebook, but does so using a case-based approach. The controller is tested on a series of more difficult worlds.
 
