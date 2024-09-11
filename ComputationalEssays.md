@@ -55,6 +55,11 @@ Topics covered include `Philosophy of mind`, `Embodiment`, and `umwelt`.
 
 #### [Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/SeekLight.ipynb)
 
+Topics covered include a `case-based controller`
+
+> This notebook uses a case-based approach to solve the problem of seeking light. The controller is tested on a series of more difficult worlds.
+
+
 #### [Demo Robots](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/DemoRobots.ipynb)
 
 Topics covered include how to create a `world`, `robot`, and `controller` in AITK
@@ -65,12 +70,8 @@ Topics covered include how to create a `world`, `robot`, and `controller` in AIT
 
 Topics covered include Rodney Brooks' `subsumption architecture`
 
-> In 1986, MIT Roboticist Rodney Brooks proposed a real-time, reactive framework for controlling robots called the subsumption architecture, which is based on a hierarchical collection of layers. This notebook demonstrates an example of this framework applied to the task of a robot trying to find a light source. 
+> In 1986, MIT Roboticist Rodney Brooks proposed a real-time, reactive framework for controlling robots called the subsumption architecture, which is based on a hierarchical collection of layers. This notebook demonstrates an example of this framework applied to the task of a robot seeking light.
 
-
-Topics covered include a `case-based controller`
-
-> This notebook solves the same problem as the subsumption notebook, but does so using a case-based approach. The controller is tested on a series of more difficult worlds.
 
 ## Generative AI
 
