@@ -16,7 +16,7 @@ If you have never used a notebook before, please review our notebook **[Intro To
 >
 >**[Data Manipulation](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/DataManipulation.ipynb)**
 
-#### Finally:
+#### Further:
 >**[Analyzing Hidden Representations](https://github.com/ArtificialIntelligenceToolkit/aitk/master/notebooks/NeuralNetworks/AnalyzingHiddenRepresentations.ipynb)**
 >
 >**[Structure of Convolutional Neural Networks](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/StructureOfConvolutionalNeuralNetworks.ipynb)**
@@ -25,15 +25,15 @@ If you have never used a notebook before, please review our notebook **[Intro To
 ### Robotics:
 #### Begin with:
 >**[What is it like to be a robot?](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/WhatIsItLikeToBeARobot.ipynb)**
-#### Further:
+#### Next:
 >**[Braitenberg Vehicles](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/BraitenbergVehicles.ipynb)**
 >
 >**[Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/SeekLight.ipynb)**
 >
+>**[Demo Robots](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/DemoRobots.ipynb)**
+#### Further:
 >**[Subsumption](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/Subsumption.ipynb)**
 >
->**[Demo Robots](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/DemoRobots.ipynb)**
-
 
 ### Generative AI
 If you have not already done so, review the **[Basic Neural Nets](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/BasicNeuralNets.ipynb)** notebook 
