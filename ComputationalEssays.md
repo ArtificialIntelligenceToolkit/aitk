@@ -53,6 +53,8 @@ Topics covered include `Philosophy of mind`, `Embodiment`, and `umwelt`.
 
 > Philosopher Thomas Nagel famously asked "What is it like to be a bat?" In this essay, we explore the question "What is it like to be a robot?" Here, you explore first-hand what it is like to sense the world from a robot's perspective, and make your way through a simulated world.
 
+#### [Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/SeekLight.ipynb)
+
 #### [Demo Robots](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/DemoRobots.ipynb)
 
 Topics covered include how to create a `world`, `robot`, and `controller` in AITK
@@ -65,7 +67,6 @@ Topics covered include Rodney Brooks' `subsumption architecture`
 
 > In 1986, MIT Roboticist Rodney Brooks proposed a real-time, reactive framework for controlling robots called the subsumption architecture, which is based on a hierarchical collection of layers. This notebook demonstrates an example of this framework applied to the task of a robot trying to find a light source. 
 
-#### [Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/SeekLight.ipynb)
 
 Topics covered include a `case-based controller`
 
