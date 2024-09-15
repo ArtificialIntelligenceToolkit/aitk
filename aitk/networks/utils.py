@@ -110,7 +110,7 @@ def make_input_from_shape(shape):
     return Input(input_shape, name="input")
 
 
-def find_path(from_layer, to_layer_name):
+def find_path(network, from_layer, to_layer_name):
     """
     Breadth-first search to find shortest path
     from from_layer to to_layer_name.
@@ -126,78 +126,32 @@ def find_path(from_layer, to_layer_name):
             return current.path
         else:
             # expand:
-            for node in current.outbound_nodes:
-                layer = node.outbound_layer
+            for layer in network._get_output_layers(current.name):
                 layer.path = current.path + [layer.name]
                 queue.append(layer)
     return None
 
 
-def gather_nodes(layers):
-    nodes = []
-    for layer in layers:
-        for node in layer.inbound_nodes:
-            if node not in nodes:
-                nodes.append(node)
-
-        for node in layer.outbound_nodes:
-            if node not in nodes:
-                nodes.append(node)
-    return nodes
-
-#def topological_sort_connections(input_layers, connections):
-#    layer_list = input_layers[:]
-#    while not done:
-#        for connection in connections:
-
-def topological_sort(layers):
-    """
-    Given a keras model and list of layers, produce a topological
-    sorted list, from input(s) to output(s).
-    """
-    nodes = topological_sort_nodes(layers)
-    layer_list = []
-    for node in nodes:
-        if hasattr(node.inbound_layers, "__iter__"):
-            for layer in node.inbound_layers:
-                if layer not in layer_list:
-                    layer_list.append(layer)
-        else:
-            if node.inbound_layers not in layer_list:
-                layer_list.append(node.inbound_layers)
-
-        if node.outbound_layer not in layer_list:
-            layer_list.append(node.outbound_layer)
-    return layer_list
-
-
-def topological_sort_nodes(layers):
-    """
-    Given a keras model and list of layers, produce a topological
-    sorted list, from input(s) to output(s).
-    """
-    # Initilize all:
-    nodes = gather_nodes(layers)
-    for node in nodes:
-        node.visited = False
-    stack = []
-    for node in reversed(nodes):
-        if not node.visited:
-            visit_node(node, stack)
-    return reversed(stack)
-
-
-def visit_node(node, stack):
-    """
-    Utility function for topological_sort.
-    """
-    node.visited = True
-    if node.outbound_layer:
-        for subnode in node.outbound_layer.outbound_nodes:
-            if not subnode.visited:
-                visit_node(subnode, stack)
-    stack.append(node)
-
+def topological_sort(network):
+    # First, marke them all not-visited:
+    for layer_from_name, layer_to_name in network._connections:
+        network._layers_map[layer_from_name].visited = False
+        network._layers_map[layer_to_name].visited = False
+    # Next gather them:
+    layers = []
+    queue = list(network._get_input_layers())
+    while queue:
+        current = queue.pop(0)
+        if not current.visited:
+            layers.append(current)
+            current.visited = True
+            queue.extend(list(network._get_output_layers(current.name)))
+    for layer_from_name, layer_to_name in network._connections:
+        if network._layers_map[layer_from_name].visited is False:
+            raise Exception("Layer %r is not part of network graph" % layer_from_name)
+        elif network._layers_map[layer_to_name].visited is False:
+            raise Exception("Layer %r is not part of network graph" % layer_to_name)
+    return layers
 
 def scale_output_for_image(vector, minmax, truncate=False):
     """

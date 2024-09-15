@@ -49,7 +49,7 @@ class Network:
     """
     Wrapper around a keras.Model.
     """
-    def __init__(self, model=None, layers=None, **config):
+    def __init__(self, model=None, layers=None, connections=None, **config):
         self._initialized = False
         self._watchers = []
         self._fit_inputs = None
@@ -65,7 +65,7 @@ class Network:
         else:
             self._pre_layers = {}
             self._name = None
-        self._connections = []
+        self._connections = [] if connections is None else connections
         # Place to put models between layers:
         self._predict_models = {}
         # Place to map layer to its input layers:
@@ -145,13 +145,14 @@ class Network:
         print("    ", list(self._pre_layers.keys()))
 
     def initialize_model(self):
-        self._layers = topological_sort(self._model.layers)
-        # Make a mapping of names to layers:
-        self._layers_map = {layer.name: layer for layer in self._layers}
+        # First, make a mapping of names to layers:
+        self._layers_map = {layer.name: layer for layer in self.model._layers}
+        # Next, get layers in topological order:
+        self._layers = topological_sort(self)
         # Get the input bank names, in order:
-        self.input_bank_order = self._get_input_layers()
+        self.input_bank_order = [layer.name for layer in self._get_input_layers()]
         # Get the output bank names, in order:
-        self.output_bank_order = self._get_output_layers()
+        self.output_bank_order = [layer.name for layer in self._get_output_layers()]
         # Get the best (shortest path) between layers:
         self._level_ordering = self._get_level_ordering()
         # Build intermediary models:
@@ -785,7 +786,8 @@ class Network:
             from_layer = self[from_layer_name]
             path = find_path(from_layer, to_layer_name)
             # Input should be what next layer expects:
-            current = input_layer = make_input_from_shape(self[path[0]].input_shape)
+            input_shape = self[path[0]]._build_shapes_dict["input_shape"]
+            current = input_layer = make_input_from_shape(input_shape)
             for layer_name in path:
                 current = self[layer_name](current)
             self._predict_models[key] = Model(inputs=input_layer, outputs=current)
@@ -1032,7 +1034,7 @@ class Network:
             else:
                 self._input_layer_names[layer.name] = tuple([layer.name])
                 self._predict_models[tuple([layer.name]), layer.name] = Model(
-                    inputs=[layer.input], outputs=[layer.output],
+                    inputs=[layer._input_tensor], outputs=[layer.output],
                 )
 
     def _get_input_tensors(self, layer_name, input_list):
@@ -1040,15 +1042,15 @@ class Network:
         Given a layer_name, return {input_layer_name: tensor}
         """
         # Recursive; results in input_list of [(name, tensor), ...]
-        for layer in self.incoming_layers(layer_name):
+        for layer in self._get_input_layers(layer_name):
             if layer.name in self._input_layer_names:
                 for layer_name in self._input_layer_names[layer.name]:
                     if layer_name not in [name for (name, tensor) in input_list]:
-                        input_list.append((layer_name, self[layer_name].input))
+                        input_list.append((layer_name, self[layer_name]._input_tensor))
             else:
                 if self._get_layer_type(layer.name) == "input":
                     if layer.name not in [name for (name, tensor) in input_list]:
-                        input_list.append((layer.name, layer.input))
+                        input_list.append((layer.name, layer._input_tensor))
                 else:
                     self._get_input_tensors(layer.name, input_list)
         return input_list
@@ -1104,15 +1106,27 @@ class Network:
         else:
             return tuple(item)
 
-    def _get_input_layers(self):
-        return tuple(
-            [x.name for x in self._layers if self._get_layer_type(x.name) == "input"]
-        )
+    def _get_input_layers(self, layer_name=None):
+        if layer_name is None:
+            return tuple(
+                [x for x in self._layers if self._get_layer_type(x.name) == "input"]
+            )
+        else:
+            return tuple(
+                [self._layers_map[layer_from] for layer_from, layer_to in self._connections
+                 if layer_to == layer_name]
+            )
 
-    def _get_output_layers(self):
-        return tuple(
-            [x.name for x in self._layers if self._get_layer_type(x.name) == "output"]
-        )
+    def _get_output_layers(self, layer_name=None):
+        if layer_name is None:
+            return tuple(
+                [x for x in self._layers if self._get_layer_type(x.name) == "output"]
+            )
+        else:
+            return tuple(
+                [self._layers_map[layer_to] for layer_from, layer_to in self._connections
+                 if layer_from == layer_name]
+            )
 
     def vshape(self, layer_name):
         """
@@ -1128,21 +1142,36 @@ class Network:
 
     def _get_output_shape(self, layer_name):
         layer = self[layer_name]
-        if isinstance(layer.output_shape, list):
-            return layer.output_shape[0][1:]
+        if ((layer._build_shapes_dict is not None) and
+            ("input_shape" in layer._build_shapes_dict)):
+            output_shape = layer.compute_output_shape(
+                layer._build_shapes_dict["input_shape"]
+            )
         else:
-            return layer.output_shape[1:]
+            output_shape = layer.batch_shape
+        if isinstance(output_shape, list):
+            return output_shape[0][1:]
+        else:
+            return output_shape[1:]
 
     def _get_input_shape(self, layer_name):
         layer = self[layer_name]
-        if isinstance(layer.input_shape, list):
-            return layer.input_shape[0][1:]
+        input_shape = layer._build_shapes_dict["input_shape"]
+        if isinstance(input_shape, list):
+            return input_shape[0][1:]
         else:
-            return layer.input_shape[1:]
+            return input_shape[1:]
 
     def _get_raw_output_shape(self, layer_name):
         layer = self[layer_name]
-        return layer.output_shape
+        if ((layer._build_shapes_dict is not None) and
+            ("input_shape" in layer._build_shapes_dict)):
+            output_shape = layer.compute_output_shape(
+                layer._build_shapes_dict["input_shape"]
+            )
+        else:
+            output_shape = layer.batch_shape
+        return output_shape
 
     def _get_feature(self, layer_name):
         """
@@ -1236,7 +1265,7 @@ class Network:
         """
         layer = self[layer_name]
         if layer.__class__.__name__ == "Flatten":
-            in_layer = self.incoming_layers(layer_name)[0]
+            in_layer = self._get_input_layers(layer_name)[0]
             return self._get_act_minmax(in_layer.name)
         elif self._get_layer_type(layer_name) == "input":
             color, mini, maxi = self._get_colormap(layer)
@@ -1580,7 +1609,7 @@ class Network:
                     continue
                 elif anchor:
                     continue
-                for out in self.outgoing_layers(layer_name):
+                for out in self._get_output_layers(layer_name):
                     if (
                         out.name not in positioning
                     ):  # is it drawn yet? if not, continue,
@@ -1761,7 +1790,7 @@ class Network:
                     x1 = cwidth + width / 2
                 y1 = cheight - 1
                 # Arrows going up
-                for out in self.outgoing_layers(layer_name):
+                for out in self._get_output_layers(layer_name):
                     if out.name not in positioning:
                         continue
                     # draw an arrow between layers:
@@ -2009,35 +2038,14 @@ class Network:
         )
         return struct
 
-    def incoming_layers(self, layer_name):
-        layer = self[layer_name]
-        layers = []
-        for node in layer.inbound_nodes:
-            if hasattr(node.inbound_layers, "__iter__"):
-                for layer in node.inbound_layers:
-                    if layer not in layers:
-                        layers.append(layer)
-            else:
-                if node.inbound_layers not in layers:
-                    layers.append(node.inbound_layers)
-        return layers
-
-    def outgoing_layers(self, layer_name):
-        layer = self[layer_name]
-        layers = []
-        for node in layer.outbound_nodes:
-            if node.outbound_layer not in layers:
-                layers.append(node.outbound_layer)
-        return layers
-
     def _get_layer_type(self, layer_name):
         """
         Determines whether a layer is a "input", "hidden", or "output"
         layer based on its connections. If no connections, then it is
         "unconnected".
         """
-        incoming_connections = self.incoming_layers(layer_name)
-        outgoing_connections = self.outgoing_layers(layer_name)
+        incoming_connections = self._get_input_layers(layer_name)
+        outgoing_connections = self._get_output_layers(layer_name)
         if len(incoming_connections) == 0 and len(outgoing_connections) == 0:
             return "unconnected"
         elif len(incoming_connections) > 0 and len(outgoing_connections) > 0:
@@ -2066,7 +2074,7 @@ class Network:
         levels = {}
         for layer in self._layers:
             level = max(
-                [levels[lay.name] for lay in self.incoming_layers(layer.name)] + [-1]
+                [levels[lay.name] for lay in self._get_input_layers(layer.name)] + [-1]
             )
             levels[layer.name] = level + 1
         max_level = max(levels.values())
@@ -2077,7 +2085,7 @@ class Network:
             ]
             ordering.append(
                 [
-                    (name, False, [x.name for x in self.incoming_layers(name)])
+                    (name, False, [x.name for x in self._get_input_layers(name)])
                     for name in layer_names
                 ]
             )  # (going_to/layer_name, anchor, coming_from)
@@ -2115,7 +2123,7 @@ class Network:
                 else:
                     # if next level doesn't contain an outgoing
                     # connection, add it to next level as anchor point
-                    for layer in self.outgoing_layers(name):
+                    for layer in self._get_output_layers(name):
                         next_level = [
                             (n, anchor) for (n, anchor, fname) in ordering[level + 1]
                         ]
@@ -2634,7 +2642,10 @@ class SimpleNetwork(Network):
         super()._init_state()
         metrics = [self.get_metric(name) for name in metrics]
         model.compile(optimizer=self._make_optimizer(optimizer), loss=loss, metrics=metrics)
-        super().__init__(model)
+        connections = []
+        for i in range(0, len(layers) - 1):
+            connections.append((layers[i].name, layers[i + 1].name))
+        super().__init__(model=model, connections=connections)
 
     def _make_optimizer(self, optimizer):
         import tensorflow as tf
