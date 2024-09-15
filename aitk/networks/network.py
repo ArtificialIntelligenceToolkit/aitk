@@ -35,6 +35,8 @@ from .utils import (
     render_curve,
     scale_output_for_image,
     svg_to_image,
+    get_array_shape,
+    get_connections,
     topological_sort,
 )
 
@@ -49,13 +51,16 @@ class Network:
     """
     Wrapper around a keras.Model.
     """
-    def __init__(self, model=None, layers=None, connections=None, **config):
+    def __init__(self, model=None, layers=None, **config):
         self._initialized = False
         self._watchers = []
         self._fit_inputs = None
         self._fit_targets = None
         self._init_state()
+        self._connections = []
         self._model = model
+        if model:
+            self._connections = get_connections(model)
         # {name: (layer, [incoming], [outgoing])...}
         if layers is not None:
             self._pre_layers = {get_layer_name(layer): layer
@@ -65,7 +70,6 @@ class Network:
         else:
             self._pre_layers = {}
             self._name = None
-        self._connections = [] if connections is None else connections
         # Place to put models between layers:
         self._predict_models = {}
         # Place to map layer to its input layers:
@@ -146,7 +150,7 @@ class Network:
 
     def initialize_model(self):
         # First, make a mapping of names to layers:
-        self._layers_map = {layer.name: layer for layer in self.model._layers}
+        self._layers_map = {layer.name: layer for layer in self._model._layers}
         # Next, get layers in topological order:
         self._layers = topological_sort(self)
         # Get the input bank names, in order:
@@ -329,8 +333,14 @@ class Network:
         kwargs["verbose"] = 0
         kwargs["initial_epoch"] = self._epoch
 
-        self._fit_inputs = kwargs.get("x", None) # inputs
-        self._fit_targets = kwargs.get("y", None) # targets
+        shape = get_array_shape(kwargs.get("x"))
+        # TODO: check all types of networks
+        if shape:
+            kwargs["x"] = np.array(kwargs["x"])
+            kwargs["y"] = np.array(kwargs["y"])
+
+        self._fit_inputs = kwargs.get("x") # inputs
+        self._fit_targets = kwargs.get("y") # targets
 
         # call underlying model fit:
         try:
@@ -2622,6 +2632,8 @@ class SimpleNetwork(Network):
                 name = make_name(index, len(layers))
                 if index == 0:
                     size = layers[index]
+                    if not isinstance(size, (list, tuple)):
+                        size = tuple([size])
                     return Input(size, name=name)
                 else:
                     size = layers[index]
@@ -2647,10 +2659,7 @@ class SimpleNetwork(Network):
         super()._init_state()
         metrics = [self.get_metric(name) for name in metrics]
         model.compile(optimizer=self._make_optimizer(optimizer), loss=loss, metrics=metrics)
-        connections = []
-        for i in range(0, len(layers) - 1):
-            connections.append((layers[i].name, layers[i + 1].name))
-        super().__init__(model=model, connections=connections)
+        super().__init__(model=model)
 
     def _make_optimizer(self, optimizer):
         import tensorflow as tf

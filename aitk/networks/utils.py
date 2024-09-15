@@ -36,16 +36,18 @@ class Line:
         self.length = math.sqrt(math.pow(lengthX, 2) + math.pow(lengthY, 2))
         self.angle = math.atan2(lengthY, lengthX)
 
+def get_array_shape(array):
+    if isinstance(array, list):
+        return [len(array)] + get_array_shape(array[0])
+    else:
+        return []
+
 
 def get_layer_name(layer):
-    from tensorflow.python.framework.ops import Tensor
-    from tensorflow.keras.models import Model
-
-    if isinstance(layer, Tensor):
-        m = Model(inputs=layer, outputs=layer)
-        return m.layers[0].name
-    else:
+    if hasattr(layer, "name"):
         return layer.name
+    else:
+        return "layer"
 
 
 def get_error_colormap():
@@ -412,3 +414,11 @@ def is_keras_tensor(item):
         return K.is_keras_tensor(item)
     except Exception:
         return False
+
+def get_connections(model):
+    connections = []
+    for layer in model.layers:
+        for node in layer._inbound_nodes:
+            for parent_node in node.parent_nodes:
+                connections.append((parent_node.operation.name, layer.name))
+    return connections
