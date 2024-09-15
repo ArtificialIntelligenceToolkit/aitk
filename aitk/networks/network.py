@@ -2512,14 +2512,19 @@ class Network:
 
     def get_metric(self, name):
         import tensorflow.keras.backend as K
+        import tensorflow as tf
 
         if name == "tolerance_accuracy":
             self._state["tolerance_accuracy_used"] = True
             def tolerance_accuracy(targets, outputs):
                 return K.mean(
                     K.all(
-                        K.less_equal(K.abs(targets - outputs),
-                                     self._tolerance), axis=-1),
+                        K.less_equal(
+                            K.abs(tf.cast(targets, tf.float32) -
+                                  tf.cast(outputs, tf.float32)),
+                            self._tolerance
+                        ), axis=-1
+                    ),
                     axis=-1)
             return tolerance_accuracy
         else:
