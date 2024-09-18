@@ -211,7 +211,6 @@ class Network:
                     self.config["layers"][layer.name]["colormap"] = ("gray", minmax[0], minmax[1])
         else:
             self._initialized = True
-            input_dataset = self.input_to_dataset(inputs)
             # If reset is true, we set to extremes so any value will adjust
             # Only do this on input layers:
             if reset:
@@ -228,7 +227,7 @@ class Network:
             # Now we set the minmax for input layer, based on past values
             # or extremes:
             for layer in self._layers:
-                outputs = self.predict_to(input_dataset, layer.name)
+                outputs = self.predict_to(inputs, layer.name)
                 color_orig, min_orig, max_orig = self.config["layers"][layer.name]["colormap"]
                 min_new, max_new = math.floor(outputs.min()), math.ceil(outputs.max())
                 if min_new != max_new:

@@ -84,6 +84,19 @@ def test_network_sequential_4():
 
     assert len(output) == 10
 
+def test_network_display():
+    network = SimpleNetwork(
+        2,
+        5,
+        10,
+    )
+
+    network.connect()
+    network.compile()
+
+    output = network.display([1, 1], return_type="image")
+
+
 def test_network_multi_inputs():
     network = Network()
     network.add(InputLayer([1], name="input-1"))
