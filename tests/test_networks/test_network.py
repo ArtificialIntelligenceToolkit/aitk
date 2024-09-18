@@ -11,6 +11,7 @@
 from tensorflow.keras.layers import Dense, InputLayer
 
 from aitk.networks import Network, SimpleNetwork
+from aitk.utils import get_dataset
 
 
 def test_network_names():
@@ -49,10 +50,9 @@ def test_network_sequential_1():
     network.connect()
     network.compile()
 
-    output = network.predict([[1, 1]])
+    output = network.propagate([1, 1])
 
-    assert len(output) == 1
-    assert len(output[0]) == 10
+    assert len(output) == 10
 
 
 def test_network_sequential_2():
@@ -173,3 +173,30 @@ def test_network_multi_inputs_outputs():
     assert len(output) == 2
     assert len(output[0]) == 2
     assert len(output[1]) == 3
+
+
+def test_network_predict():
+    network = Network()
+    network.add(InputLayer([2]))
+    network.add(Dense(5))
+    network.add(Dense(10))
+
+    network.connect()
+    network.compile()
+
+    output = network.predict([[1, 1]])
+
+    assert len(output) == 1
+    assert len(output[0]) == 10
+
+
+def test_network_model():
+    from tensorflow.keras.applications import VGG16
+
+    dataset = get_dataset("dogs-vs-cats-100")
+    cats = dataset["cats"]
+    dogs = dataset["dogs"]
+
+    vgg16 = VGG16(weights="imagenet")
+    vgg16_network = Network(vgg16)
+    vgg16_network.display(cats[0], rotate=True, scale=1.5, return_type="image")

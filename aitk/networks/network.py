@@ -63,7 +63,7 @@ class Network:
         self._fit_inputs = None
         self._fit_targets = None
         self._connections = []
-        self._model = model
+        self._model = None
         # Place to put models between layers:
         self._predict_models = {}
         # Place to map layer to its input layers:
@@ -73,7 +73,7 @@ class Network:
         self._history = {"weights": [], "metrics": []}
         self._epoch = 0
         self._tolerance = 0.1
-        self._name = self._model.name if self._model is not None else name
+        self._name = name
         self._layers = []
         self._layers_map = {}
         self.input_bank_order = []
@@ -117,14 +117,14 @@ class Network:
         self.set_config(**config)
         if model:
             self._model = model
+            self._name = self._model.name
             for layer in model.layers:
                 self.add(layer)
             self._connections = get_connections(model)
-        else:
-            self._model = None
-            if layers:
-                for layer in layers:
-                    self.add(layer)
+            self.initialize_model()
+        elif layers:
+            for layer in layers:
+                self.add(layer)
         # When we are done here, we are in 1 of 2 states:
         # 1. A model, ready to go
         # 2. Network, ready for more add(), connect(), compile()
@@ -195,7 +195,7 @@ class Network:
         if not self._layers:
             raise Exception("Layers must be set before initialization")
 
-        if inputs is None:
+        if not inputs:
             # We don't have direct values, so we base colormap
             # on activation output ranges
             for layer in self._layers:
@@ -228,7 +228,7 @@ class Network:
             # Now we set the minmax for input layer, based on past values
             # or extremes:
             for layer in self._layers:
-                outputs = self.predict_to(inputs, layer.name, return_type="numpy")
+                outputs = self.propagate_to(inputs, layer.name, return_type="numpy")
                 # FIXME: multiple output banks are lists of numpys
                 color_orig, min_orig, max_orig = self.config["layers"][layer.name][
                     "colormap"
@@ -513,7 +513,7 @@ class Network:
             plt.pause(0.01)
             # plt.show(block=False)
 
-    def _extract_inputs(self, inputs, input_names):
+    def _prepare_input(self, inputs, input_names):
         """
         Get the input_names from the inputs
         """
@@ -635,16 +635,52 @@ class Network:
         self.initialize_model()
         return results
 
-    def predict(self, inputs):
+    def _post_process_outputs(self, outputs, return_type):
+        def numpy(item):
+            if hasattr(item, "numpy"):
+                return item.numpy()
+            else:
+                return item
+
+        if len(self.output_bank_order) == 1:
+            if return_type == "list":
+                return numpy(outputs)[0].tolist()
+            elif return_type == "numpy":
+                return numpy(outputs)[0]
+        else:
+            if return_type == "list":
+                return [numpy(item)[0].tolist() for item in outputs]
+            elif return_type == "numpy":
+                return [numpy(item)[0] for item in outputs]
+
+    def _post_process_dataset_outputs(self, outputs, return_type):
+        def numpy(item):
+            if hasattr(item, "numpy"):
+                return item.numpy()
+            else:
+                return item
+
+        if len(self.output_bank_order) == 1:
+            if return_type == "list":
+                return numpy(outputs).tolist()
+            elif return_type == "numpy":
+                return numpy(outputs)
+        else:
+            if return_type == "list":
+                return [numpy(item).tolist() for item in outputs]
+            elif return_type == "numpy":
+                return [numpy(item) for item in outputs]
+
+    def propagate(self, inputs, return_type="list"):
         """
         Propagate input patterns to a bank in the network.
         """
         if self._model is None:
             raise Exception("Model has not yet been compiled")
 
-        input_vectors = self._extract_inputs(inputs, self.input_bank_order)
+        input_vectors = self._prepare_input(inputs, self.input_bank_order)
         try:
-            outputs = self._model(input_vectors, training=False).numpy()
+            outputs = self._model(input_vectors, training=False)
         except Exception:
             input_layers_shapes = [
                 self._get_raw_output_shape(layer_name)
@@ -661,10 +697,7 @@ class Network:
                 % hints
             ) from None
 
-        if len(self.output_bank_order) == 1:
-            return outputs[0].tolist()
-        else:
-            return [item[0].tolist() for item in outputs]
+        return self._post_process_outputs(outputs, return_type)
 
     def set_pca_spaces(self, inputs):
         """
@@ -674,7 +707,7 @@ class Network:
 
         for layer in self.layers:
             pca = PCA(2)
-            hidden_raw = self.predict_to(inputs, layer.name)
+            hidden_raw = self.predict_to(inputs, layer.name, return_type="numpy")
             try:
                 pca_space = pca.fit(hidden_raw)
             except ValueError:
@@ -689,10 +722,13 @@ class Network:
             return len(inputs[0])
 
     def predict_histogram_to(self, inputs, layer_name):
+        """
+        Entire dataset
+        """
         if self._model is None:
             raise Exception("Model has not yet been compiled")
 
-        hidden_raw = self.predict_to(inputs, layer_name)
+        hidden_raw = self.predict_to(inputs, layer_name, return_type="numpy")
 
         plt.hist(hidden_raw)
         plt.axis("off")
@@ -709,7 +745,7 @@ class Network:
         if layer_name not in self._state["pca"]:
             raise Exception("Need to set_pca_spaces first")
 
-        hidden_raw = self.predict_to(inputs, layer_name)
+        hidden_raw = self.predict_to(inputs, layer_name, return_type="numpy")
         pca_space = self._state["pca"][layer_name]
         if pca_space is not None:
             hidden_pca = pca_space.transform(hidden_raw)
@@ -852,9 +888,9 @@ class Network:
 
         input_names = self._input_layer_names[layer_name]
         model = self._predict_models[input_names, layer_name]
-        input_vectors = self._extract_inputs(inputs, input_names)
+        inputs = self._prepare_dataset_inputs(inputs)
         try:
-            outputs = model(input_vectors, training=False).numpy()
+            outputs = model(inputs, training=False)
         except Exception:
             input_layers_shapes = [
                 self._get_raw_output_shape(layer_name) for layer_name in input_names
@@ -870,16 +906,7 @@ class Network:
                 % hints
             ) from None
 
-        if len(self.output_bank_order) == 1:
-            if return_type == "list":
-                return outputs[0].tolist()
-            elif return_type == "numpy":
-                return outputs[0]
-        else:
-            if return_type == "list":
-                return [item[0].tolist() for item in outputs]
-            elif return_type == "numpy":
-                return [item[0] for item in outputs]
+        return self._post_process_dataset_outputs(outputs, return_type)
 
     def predict_from(self, inputs, from_layer_name, to_layer_name):
         """
@@ -1006,6 +1033,8 @@ class Network:
             except Exception:
                 return_type = "image"
 
+        inputs = self._prepare_input(inputs, self.input_bank_order)
+
         if return_type == "html":
             svg = self.get_image(
                 inputs,
@@ -1087,7 +1116,7 @@ class Network:
             widget = watcher.get_widget(show_error, show_targets, rotate, scale)
         display(widget)
 
-    def propagate(
+    def predict(
         self,
         inputs,
         targets=None,
@@ -1100,27 +1129,29 @@ class Network:
         if show:
             for watcher in self._watchers:
                 watcher.update(inputs, targets)
-        dataset = self.input_to_dataset(inputs)
-        # FIXME: rather than just the first, format in case
-        # of multiple output layers
-        return self._model(dataset, training=False)[0].numpy()
+        inputs = self._prepare_dataset_inputs(inputs)
+        outputs = self._model(inputs, training=False)
+        return outputs
 
     def propagate_to(
         self,
         inputs,
         layer_name,
-        return_type=None,
+        return_type="numpy",
         channel=None,
     ):
         # FIXME: rather than just the first, format in case
         # of multiple output layers
-        array = self.predict_to(inputs, layer_name)
-        # FIXME: get output banks
-        # Strip out just the single return row from one bank
+        input_names = self._input_layer_names[layer_name]
+        model = self._predict_models[input_names, layer_name]
+        # FIXME?
+        # input_vectors = self._prepare_input(inputs, input_names)
+        array = model(inputs, training=False)
+
         if return_type == "image":
             return self._layer_array_to_image(layer_name, array, channel=channel)
         else:
-            return array
+            return self._post_process_outputs(array, return_type)
 
     def propagate_each(
         self,
@@ -1523,15 +1554,14 @@ class Network:
 
             count += 1
 
-    def input_to_dataset(self, input):
+    def _prepare_dataset_inputs(self, inputs):
         """
-        Take input tensor(s) and turn into an appropriate
-        dataset.
+        Take input dataset and make sure it is correct format.
         """
         if len(self.input_bank_order) == 1:
-            inputs = [np.array([input])]
+            inputs = np.array(inputs)
         else:
-            inputs = [np.array([bank]) for bank in input]
+            inputs = [np.array(bank) for bank in inputs]
         return inputs
 
     def target_to_dataset(self, target):
@@ -2379,7 +2409,7 @@ class Network:
         if inputs is None:
             inputs = self.make_dummy_dataset()
         if targets is not None:
-            outputs = self.predict(inputs)
+            outputs = self.propagate(inputs)
             if len(self.output_bank_order) == 1:
                 targets = [targets]
                 errors = (np.array(outputs) - np.array(targets)).tolist()

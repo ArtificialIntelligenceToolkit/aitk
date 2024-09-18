@@ -36,6 +36,7 @@ class Line:
         self.length = math.sqrt(math.pow(lengthX, 2) + math.pow(lengthY, 2))
         self.angle = math.atan2(lengthY, lengthX)
 
+
 def get_array_shape(array):
     if isinstance(array, list):
         return [len(array)] + get_array_shape(array[0])
@@ -139,7 +140,13 @@ def scale_output_for_image(vector, minmax, truncate=False):
     Given an activation name (or something else) and an output
     vector, scale the vector.
     """
-    return rescale_numpy_array(vector, minmax, (0, 255), "uint8", truncate=truncate,)
+    return rescale_numpy_array(
+        vector,
+        minmax,
+        (0, 255),
+        "uint8",
+        truncate=truncate,
+    )
 
 
 def rescale_numpy_array(a, old_range, new_range, new_dtype, truncate=False):
@@ -181,7 +188,8 @@ def svg_to_image(svg, config):
     else:
         raise Exception("svg_to_image takes a str, rather than %s" % type(svg))
 
-    image_bytes = cairosvg.svg2png(bytestring=svg)
+    # FIXME: if not in notebook, need output_height?
+    image_bytes = cairosvg.svg2png(bytestring=svg)  # , output_height=INT)
     image = Image.open(io.BytesIO(image_bytes))
     if "background_color" in config:
         # create a blank image, with background:
@@ -393,6 +401,7 @@ def is_keras_tensor(item):
         return K.is_keras_tensor(item)
     except Exception:
         return False
+
 
 def get_connections(model):
     connections = []
