@@ -227,7 +227,8 @@ class Network:
             # Now we set the minmax for input layer, based on past values
             # or extremes:
             for layer in self._layers:
-                outputs = self.predict_to(inputs, layer.name)
+                outputs = self.predict_to(inputs, layer.name, return_type="numpy")
+                # FIXME: multiple output banks are lists of numpys
                 color_orig, min_orig, max_orig = self.config["layers"][layer.name]["colormap"]
                 min_new, max_new = math.floor(outputs.min()), math.ceil(outputs.max())
                 if min_new != max_new:
@@ -641,9 +642,9 @@ class Network:
             ) from None
 
         if len(self.output_bank_order) == 1:
-            return outputs[0]
+            return outputs[0].tolist()
         else:
-            return [item[0] for item in outputs]
+            return [item[0].tolist() for item in outputs]
 
     def set_pca_spaces(self, inputs):
         """
@@ -818,7 +819,7 @@ class Network:
             raise ValueError("unable to convert to return_type %r" % return_type)
 
 
-    def predict_to(self, inputs, layer_name):
+    def predict_to(self, inputs, layer_name, return_type="list"):
         """
         Propagate input patterns to a bank in the network.
 
@@ -852,7 +853,16 @@ class Network:
                 % hints
             ) from None
 
-        return outputs
+        if len(self.output_bank_order) == 1:
+            if return_type == "list":
+                return outputs[0].tolist()
+            elif return_type == "numpy":
+                return outputs[0]
+        else:
+            if return_type == "list":
+                return [item[0].tolist() for item in outputs]
+            elif return_type == "numpy":
+                return [item[0] for item in outputs]
 
     def predict_from(self, inputs, from_layer_name, to_layer_name):
         """
@@ -1064,13 +1074,11 @@ class Network:
                      return_type=None,
                      channel=None,
     ):
-        dataset = self.input_to_dataset(inputs)
         # FIXME: rather than just the first, format in case
         # of multiple output layers
-        array = self.predict_to(dataset, layer_name)
+        array = self.predict_to(inputs, layer_name)
         # FIXME: get output banks
         # Strip out just the single return row from one bank
-        array = array[0]
         if return_type == "image":
             return self._layer_array_to_image(layer_name, array, channel=channel)
         else:
@@ -1491,13 +1499,16 @@ class Network:
     def to_svg(self, inputs=None, targets=None, mode="activation", colors=None, sizes=None):
         """
         """
+        # FIXME:
         # First, turn single patterns into a dataset:
-        if inputs is not None:
-            if mode == "activation":
-                inputs = self.input_to_dataset(inputs)
-        if targets is not None:
-            if mode == "activation":
-                targets = self.target_to_dataset(targets)
+        #if inputs is not None:
+        #    if mode == "activation":
+        #        inputs = self._extract_inputs(inputs, self.input_bank_order)
+        #
+        #if targets is not None:
+        #    if mode == "activation":
+        #        # FIXME: 
+        #        targets = self.target_to_dataset(targets)
         # Next, build the structures:
         struct = self.build_struct(inputs, targets, mode, colors, sizes)
         templates = get_templates(self.config)
@@ -2319,7 +2330,7 @@ class Network:
         if inputs is None:
             inputs = self.make_dummy_dataset()
         if targets is not None:
-            outputs = self._model(inputs, training=False).numpy()
+            outputs = self.predict(inputs)
             if len(self.output_bank_order) == 1:
                 targets = [targets]
                 errors = (np.array(outputs) - np.array(targets)).tolist()
@@ -2368,7 +2379,7 @@ class Network:
                 else: # activations of a dataset
                     try:
                         image = self.make_image(
-                            layer_name, self.predict_to(inputs, layer_name)[0]
+                            layer_name, self.predict_to(inputs, layer_name)
                         )
                     except Exception:
                         # Error: make a red image
