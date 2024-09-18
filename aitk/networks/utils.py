@@ -128,32 +128,11 @@ def find_path(network, from_layer, to_layer_name):
             return current.path
         else:
             # expand:
-            for layer in network._get_output_layers(current.name):
+            for layer in network._get_layers_from(current.name):
                 layer.path = current.path + [layer.name]
                 queue.append(layer)
     return None
 
-
-def topological_sort(network):
-    # First, marke them all not-visited:
-    for layer_from_name, layer_to_name in network._connections:
-        network._layers_map[layer_from_name].visited = False
-        network._layers_map[layer_to_name].visited = False
-    # Next gather them:
-    layers = []
-    queue = list(network._get_input_layers())
-    while queue:
-        current = queue.pop(0)
-        if not current.visited:
-            layers.append(current)
-            current.visited = True
-            queue.extend(list(network._get_output_layers(current.name)))
-    for layer_from_name, layer_to_name in network._connections:
-        if network._layers_map[layer_from_name].visited is False:
-            raise Exception("Layer %r is not part of network graph" % layer_from_name)
-        elif network._layers_map[layer_to_name].visited is False:
-            raise Exception("Layer %r is not part of network graph" % layer_to_name)
-    return layers
 
 def scale_output_for_image(vector, minmax, truncate=False):
     """
