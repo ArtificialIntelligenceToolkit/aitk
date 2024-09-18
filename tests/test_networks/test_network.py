@@ -1,5 +1,16 @@
+# -*- coding: utf-8 -*-
+# ******************************************************
+# aitk.networks: Keras model wrapper with visualizations
+#
+# Copyright (c) 2024 Douglas S. Blank
+#
+# https://github.com/ArtificialIntelligenceToolkit/aitk.networks
+#
+# ******************************************************
+
+from tensorflow.keras.layers import Dense, InputLayer
+
 from aitk.networks import Network, SimpleNetwork
-from tensorflow.keras.layers import InputLayer, Dense
 
 
 def test_network_names():
@@ -13,8 +24,8 @@ def test_network_names():
     assert network._layers[1].name.startswith("input_")
     assert network._layers[2].name.startswith("dense")
     assert network._layers[3].name.startswith("dense_")
-    
-    
+
+
 def test_network_names_again():
     # Should still follow this pattern
     network = Network()
@@ -42,6 +53,7 @@ def test_network_sequential_1():
 
     assert len(output) == 10
 
+
 def test_network_sequential_2():
     network = SimpleNetwork(
         InputLayer([2]),
@@ -55,6 +67,7 @@ def test_network_sequential_2():
     output = network.predict([1, 1])
 
     assert len(output) == 10
+
 
 def test_network_sequential_3():
     network = SimpleNetwork(
@@ -70,6 +83,7 @@ def test_network_sequential_3():
 
     assert len(output) == 10
 
+
 def test_network_sequential_4():
     network = SimpleNetwork(
         2,
@@ -83,6 +97,7 @@ def test_network_sequential_4():
     output = network.predict([1, 1])
 
     assert len(output) == 10
+
 
 def test_network_display():
     network = SimpleNetwork(
