@@ -49,9 +49,10 @@ def test_network_sequential_1():
     network.connect()
     network.compile()
 
-    output = network.predict([1, 1])
+    output = network.predict([[1, 1]])
 
-    assert len(output) == 10
+    assert len(output) == 1
+    assert len(output[0]) == 10
 
 
 def test_network_sequential_2():
@@ -64,7 +65,7 @@ def test_network_sequential_2():
     network.connect()
     network.compile()
 
-    output = network.predict([1, 1])
+    output = network.propagate([1, 1])
 
     assert len(output) == 10
 
@@ -79,7 +80,7 @@ def test_network_sequential_3():
     network.connect()
     network.compile()
 
-    output = network.predict([1, 1])
+    output = network.propagate([1, 1])
 
     assert len(output) == 10
 
@@ -94,7 +95,7 @@ def test_network_sequential_4():
     network.connect()
     network.compile()
 
-    output = network.predict([1, 1])
+    output = network.propagate([1, 1])
 
     assert len(output) == 10
 
@@ -111,6 +112,8 @@ def test_network_display():
 
     output = network.display([1, 1], return_type="image")
 
+    assert output.size == (400, 260)
+
 
 def test_network_multi_inputs():
     network = Network()
@@ -125,6 +128,48 @@ def test_network_multi_inputs():
 
     network.compile()
 
-    output = network.predict([[1], [1, 2]])
+    output = network.propagate([[1], [1, 2]])
 
     assert len(output) == 6
+
+
+def test_network_multi_outputs():
+    network = Network()
+    network.add(InputLayer([1], name="input-1"))
+    network.add(Dense(5, name="hidden"))
+    network.add(Dense(2, name="output-1"))
+    network.add(Dense(3, name="output-2"))
+
+    network.connect("input-1", "hidden")
+    network.connect("hidden", "output-1")
+    network.connect("hidden", "output-2")
+
+    network.compile()
+
+    output = network.propagate([1])
+
+    assert len(output) == 2
+    assert len(output[0]) == 2
+    assert len(output[1]) == 3
+
+
+def test_network_multi_inputs_outputs():
+    network = Network()
+    network.add(InputLayer([1], name="input-1"))
+    network.add(InputLayer([2], name="input-2"))
+    network.add(Dense(5, name="hidden"))
+    network.add(Dense(2, name="output-1"))
+    network.add(Dense(3, name="output-2"))
+
+    network.connect("input-1", "hidden")
+    network.connect("input-2", "hidden")
+    network.connect("hidden", "output-1")
+    network.connect("hidden", "output-2")
+
+    network.compile()
+
+    output = network.propagate([[1], [0, 0.5]])
+
+    assert len(output) == 2
+    assert len(output[0]) == 2
+    assert len(output[1]) == 3
