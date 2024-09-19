@@ -121,7 +121,7 @@ class Network:
             for layer in model.layers:
                 self.add(layer)
             self._connections = get_connections(model)
-            self.initialize_model()
+            self.compile()
         elif layers:
             for layer in layers:
                 self.add(layer)
@@ -195,7 +195,7 @@ class Network:
         if not self._layers:
             raise Exception("Layers must be set before initialization")
 
-        if not inputs:
+        if inputs is None or len(inputs) == 0:
             # We don't have direct values, so we base colormap
             # on activation output ranges
             for layer in self._layers:
@@ -228,6 +228,7 @@ class Network:
             # Now we set the minmax for input layer, based on past values
             # or extremes:
             for layer in self._layers:
+                # FIXME?
                 outputs = self.propagate_to(inputs, layer.name, return_type="numpy")
                 # FIXME: multiple output banks are lists of numpys
                 color_orig, min_orig, max_orig = self.config["layers"][layer.name][
@@ -1033,11 +1034,11 @@ class Network:
             except Exception:
                 return_type = "image"
 
-        inputs = self._prepare_input(inputs, self.input_bank_order)
+        input_vectors = self._prepare_input(inputs, self.input_bank_order)
 
         if return_type == "html":
             svg = self.get_image(
-                inputs,
+                input_vectors,
                 targets,
                 show_error,
                 show_targets,
@@ -1140,13 +1141,10 @@ class Network:
         return_type="numpy",
         channel=None,
     ):
-        # FIXME: rather than just the first, format in case
-        # of multiple output layers
         input_names = self._input_layer_names[layer_name]
         model = self._predict_models[input_names, layer_name]
-        # FIXME?
-        # input_vectors = self._prepare_input(inputs, input_names)
-        array = model(inputs, training=False)
+        input_vectors = self._prepare_input(inputs, input_names)
+        array = model(input_vectors, training=False)
 
         if return_type == "image":
             return self._layer_array_to_image(layer_name, array, channel=channel)

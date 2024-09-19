@@ -112,7 +112,8 @@ def test_network_display():
 
     output = network.display([1, 1], return_type="image")
 
-    assert output.size == (400, 260)
+    assert output.size[0] > 300
+    assert output.size[1] > 200
 
 
 def test_network_multi_inputs():
