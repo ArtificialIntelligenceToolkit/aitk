@@ -921,7 +921,7 @@ class Network:
         key = (tuple([from_layer_name]), to_layer_name)
         if key not in self._predict_models:
             from_layer = self[from_layer_name]
-            path = find_path(from_layer, to_layer_name)
+            path = find_path(self, from_layer, to_layer_name)
             # Input should be what next layer expects:
             input_shape = self[path[0]]._build_shapes_dict["input_shape"]
             current = input_layer = make_input_from_shape(input_shape)
