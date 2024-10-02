@@ -43,6 +43,7 @@ def test_set_weights():
         output = network.propagate(inputs[i])
         assert np.allclose(output, expected_outputs[i])
 
+        
 def test_get_weights():
     network = SimpleNetwork(3, 2, 1)
     network.set_weights([1, 1, 1, 1, 1, 1, -2.5, -1.5, -3, 2, 0])
@@ -56,6 +57,14 @@ def test_get_weights():
     assert len(weights[1]) == 2
     assert len(weights[2]) == 2
     assert len(weights[3]) == 1
+
+    
+def test_get_weights_flat():
+    network = SimpleNetwork(3, 2, 1)
+    original = [1, 1, 1, 1, 1, 1, -2.5, -1.5, -3, 2, 0]
+    network.set_weights(original)
+    weights = network.get_weights(flat=True)
+    assert np.allclose(weights, original)
     
         
 def test_propagate_to():
