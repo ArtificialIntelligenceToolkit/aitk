@@ -223,7 +223,7 @@ class GeneticAlgorithm(object):
         print(f"Maximum number of generations: {self.generations}")
         print(f"  Elite percentage {self.elite_percent} ({elite_count}/{self.popSize} chromosomes per generation)")
         print(f"  Crossover rate: {self.crossover_rate} (~{int((self.popSize - elite_count) * self.crossover_rate)}/{self.popSize - elite_count} crossovers per generation)")
-        print(f"  Mutation rate: {self.mutation_rate} (~{int((self.popSize - elite_count) * self.length * self.mutation_rate * 2)}/{(self.popSize - elite_count) * self.length} genes per generation)")
+        print(f"  Mutation rate: {self.mutation_rate} (~{int((self.popSize - elite_count) * self.length * self.mutation_rate)}/{(self.popSize - elite_count) * self.length} genes per generation)")
 
         if self.generation == 0:
             print("Evaluating initial population...")
