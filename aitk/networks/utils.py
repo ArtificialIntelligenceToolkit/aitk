@@ -388,3 +388,13 @@ def get_connections(model):
             for parent_node in node.parent_nodes:
                 connections.append((parent_node.operation.name, layer.name))
     return connections
+
+
+def get_layer_input_tensor(layer):
+    """
+    Get the layer, or layer._input_tensor
+    """
+    if hasattr(layer, "_input_tensor"):
+        return layer._input_tensor
+    else:
+        return layer

@@ -20,8 +20,12 @@ from types import FunctionType
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
+import tensorflow.keras.backend as K
 from matplotlib import cm
 from PIL import Image
+from tensorflow.keras.layers import Concatenate, Dense, InputLayer, Layer
+from tensorflow.keras.models import Model
 
 from aitk.utils import array_to_image
 
@@ -30,6 +34,7 @@ from .utils import (
     get_array_shape,
     get_connections,
     get_error_colormap,
+    get_layer_input_tensor,
     get_templates,
     image_to_uri,
     is_keras_tensor,
@@ -140,8 +145,6 @@ class Network:
         """
         Add a layer to the network.
         """
-        from tensorflow.keras.layers import Layer
-
         if isinstance(layer, FunctionType):
             raise Exception("Don't use Input; use InputLayer")
 
@@ -530,8 +533,6 @@ class Network:
             ]
 
     def build_model(self):
-        from tensorflow.keras.models import Model
-
         if len(self._connections) == 0:
             raise Exception("Need to connect layers before building model")
 
@@ -585,9 +586,11 @@ class Network:
         return sorted_layers
 
     def _build_graph_to(self, layer_name):
+        """
+        Given the name of a layer, build all of the models
+        to that layer by calling the Keras layer as a function.
+        """
         # recursive
-        from tensorflow.keras.layers import Concatenate, InputLayer
-
         layers = self._get_layers_to(layer_name)
         if len(layers) == 0:
             # An input layer:
@@ -601,7 +604,7 @@ class Network:
             incoming_layer = incoming_layers[0]
         else:  # more than one
             incoming_layer = Concatenate()(
-                [layer._input_tensor for layer in incoming_layers]
+                [get_layer_input_tensor(layer) for layer in incoming_layers]
             )
 
         if isinstance(incoming_layer, InputLayer):
@@ -912,8 +915,6 @@ class Network:
         """
         Propagate patterns from one bank to another bank in the network.
         """
-        from tensorflow.keras.models import Model
-
         if self._model is None:
             raise Exception("Model has not yet been compiled")
 
@@ -1037,7 +1038,7 @@ class Network:
             except Exception:
                 return_type = "image"
 
-        input_vectors = self._prepare_input(inputs, self.input_bank_order)
+        # input_vectors = self._prepare_input(inputs, self.input_bank_order)
 
         if return_type == "html":
             svg = self.get_image(
@@ -1182,8 +1183,6 @@ class Network:
                     count += 1
 
     def _build_predict_models(self):
-        from tensorflow.keras.models import Model
-
         # for all layers, inputs to here:
         for layer in self._layers:
             if self._get_layer_type(layer.name) != "input":
@@ -1272,18 +1271,20 @@ class Network:
             return tuple(item)
 
     def _get_input_layers(self):
-        layers = set()
+        layers = []
         for layer_from, layer_to in self._connections:
-            layers.add(layer_from)
+            if layer_from not in layers:
+                layers.append(layer_from)
         for layer_from, layer_to in self._connections:
             if layer_to in layers:
                 layers.remove(layer_to)
         return [self._layers_map[name] for name in layers]
 
     def _get_output_layers(self):
-        layers = set()
+        layers = []
         for layer_from, layer_to in self._connections:
-            layers.add(layer_to)
+            if layer_to not in layers:
+                layers.append(layer_to)
         for layer_from, layer_to in self._connections:
             if layer_from in layers:
                 layers.remove(layer_from)
@@ -2693,9 +2694,6 @@ class Network:
             print("WARNING: you need to use an optimizer with lr")
 
     def get_metric(self, name):
-        import tensorflow as tf
-        import tensorflow.keras.backend as K
-
         if name == "tolerance_accuracy":
             self._state["tolerance_accuracy_used"] = True
 
@@ -2807,8 +2805,6 @@ class SimpleNetwork(Network):
             * (int, int, ...): (input layers only) the shape of the input patterns
             * keras layer instance: an instance of a keras layer, like Flatten()
         """
-        import tensorflow.keras.layers
-        from tensorflow.keras.layers import Dense, InputLayer, Layer
 
         def make_name(index, total):
             if index == 0:
@@ -2824,9 +2820,9 @@ class SimpleNetwork(Network):
             if isinstance(layers[index], Layer) or is_keras_tensor(layers[index]):
                 return layers[index]
             elif isinstance(layers[index], str) and hasattr(
-                tensorflow.keras.layers, layers[index]
+                tf.keras.layers, layers[index]
             ):
-                layer_class = getattr(tensorflow.keras.layers, layers[index])
+                layer_class = getattr(tf.keras.layers, layers[index])
                 return layer_class()
             else:
                 name = make_name(index, len(layers))
@@ -2859,8 +2855,6 @@ class SimpleNetwork(Network):
         )
 
     def _make_optimizer(self, optimizer):
-        import tensorflow as tf
-
         # Get optimizer with some defaults
         if optimizer == "sgd":
             return tf.keras.optimizers.SGD(
