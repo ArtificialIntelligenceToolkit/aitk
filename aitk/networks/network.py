@@ -1042,7 +1042,7 @@ class Network:
 
         if return_type == "html":
             svg = self.get_image(
-                input_vectors,
+                inputs,
                 targets,
                 show_error,
                 show_targets,
