@@ -2460,7 +2460,7 @@ class Network:
                 else:  # activations of a dataset
                     try:
                         image = self.make_image(
-                            layer_name, self.predict_to(inputs, layer_name)
+                            layer_name, self.predict_to([inputs], layer_name)[0]
                         )
                     except Exception:
                         # Error: make a red image
