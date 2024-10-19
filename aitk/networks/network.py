@@ -2450,13 +2450,10 @@ class Network:
                     continue
                 hiding[column] = False
                 # The rest of this for loop is handling image of bank
-                keep_aspect_ratio = None
                 if mode == "pca":
                     image = self.predict_pca_to(inputs, layer_name, colors, sizes)
-                    keep_aspect_ratio = True
                 elif mode == "histogram":
                     image = self.predict_histogram_to(inputs, layer_name)
-                    keep_aspect_ratio = True
                 else:  # activations of a dataset
                     try:
                         image = self.make_image(
