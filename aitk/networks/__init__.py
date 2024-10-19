@@ -8,4 +8,4 @@
 #
 # ******************************************************
 
-from .network import Network, SimpleNetwork  # noqa: F401
+from .network import Dense, InputLayer, Network, SimpleNetwork  # noqa: F401

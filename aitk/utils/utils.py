@@ -8,10 +8,10 @@
 #
 # ***********************************************************
 
-import math
 import base64
 import html
 import io
+import math
 import os
 import sys
 
@@ -65,9 +65,13 @@ def array_to_image(array, colormap=None, channels="last", minmax=None):
             ) from exc
 
         ## Need to be in range (0,1) for colormapping:
+        if minmax[0] != minmax[1]:
+            array.clip(*minmax)
+        else:
+            minmax = [minmax[0] - 1, minmax[1] + 1]
         array = rescale_array(array, minmax, (0, 1), "float")
         try:
-            cm_hot = cm.get_cmap(image_colormap)
+            cm_hot = cm.get_cmap(colormap)
             array = cm_hot(array)
         except Exception:
             print("WARNING: invalid colormap; ignored")
@@ -80,6 +84,7 @@ def array_to_image(array, colormap=None, channels="last", minmax=None):
     array = rescale_array(array, minmax, (0, 255), "uint8")
     image = PIL.Image.fromarray(array, mode)
     return image
+
 
 def rescale_array(array, old_range, new_range, dtype):
     """
@@ -105,6 +110,7 @@ def rescale_array(array, old_range, new_range, dtype):
     else:
         return (new_min + (array - old_min) * new_delta / old_delta).astype(dtype)
 
+
 def image_to_data(img_src, format="PNG"):
     # Convert to binary data:
     b = io.BytesIO()
@@ -115,8 +121,16 @@ def image_to_data(img_src, format="PNG"):
         data = data.decode("latin1")
     return "data:image/%s;base64,%s" % (format, html.escape(data))
 
-def gallery(images, labels="{index}", border_width=1, background_color=(255, 255, 255),
-            return_type="display", clear=True, gallery_shape=None):
+
+def gallery(
+    images,
+    labels="{index}",
+    border_width=1,
+    background_color=(255, 255, 255),
+    return_type="display",
+    clear=True,
+    gallery_shape=None,
+):
     """
     Construct a gallery (grid) of images. Can return an HTML table of images
     or a single Image.
@@ -155,10 +169,11 @@ def gallery(images, labels="{index}", border_width=1, background_color=(255, 255
     if len(images) == 0:
         return None
 
-    if ((gallery_shape is None) or
-        (len(gallery_shape) == 2 and
-         (gallery_shape[0] is None) and
-         (gallery_shape[1] is None))):
+    if (gallery_shape is None) or (
+        len(gallery_shape) == 2
+        and (gallery_shape[0] is None)
+        and (gallery_shape[1] is None)
+    ):
         gallery_cols = math.ceil(math.sqrt(len(images)))
         gallery_rows = math.ceil(len(images) / gallery_cols)
     else:
@@ -201,16 +216,24 @@ def gallery(images, labels="{index}", border_width=1, background_color=(255, 255
             label_pattern = labels
             labels = [label_pattern for i in range(len(images))]
 
-        table = '<table>'
+        table = "<table>"
         index = 0
         for row in range(gallery_rows):
             table += '<tr style="padding: %dpx">' % border_width
             for col in range(gallery_cols):
                 if index < len(labels):
-                    label = str(labels[index]).format(**{
-                        "count": index + 1, "index": index, "row": row, "col": col})
-                    table += '<td style="text-align: center; padding: %dpx">%s<br/>' % (border_width, label)
-                    table += '<img src="%s" alt="%s" title="%s"></img>' % (image_to_data(images[index]), label, label)
+                    label = str(labels[index]).format(
+                        **{"count": index + 1, "index": index, "row": row, "col": col}
+                    )
+                    table += '<td style="text-align: center; padding: %dpx">%s<br/>' % (
+                        border_width,
+                        label,
+                    )
+                    table += '<img src="%s" alt="%s" title="%s"></img>' % (
+                        image_to_data(images[index]),
+                        label,
+                        label,
+                    )
                     table += "</td>"
                 else:
                     table += "<td></td>"
@@ -228,6 +251,7 @@ def gallery(images, labels="{index}", border_width=1, background_color=(255, 255
     else:
         return output
 
+
 def progress_bar(range, show_progress=True, progress_type="tqdm"):
     """
     Wrap a range/iter in a progress bar (or not).
@@ -242,14 +266,15 @@ def progress_bar(range, show_progress=True, progress_type="tqdm"):
         return range
     elif progress_type == "tqdm":
         return tqdm.tqdm(range)
-    elif ((progress_type == "notebook") and
-          (sys.platform != "emscripten")):
+    elif (progress_type == "notebook") and (sys.platform != "emscripten"):
         return tqdm.notebook.tqdm(range)
     else:
         return range
 
-def images_to_movie(*frames, movie_name="aitk_movie", start=0, stop=None,
-                    loop=0, duration=100, mp4=True):
+
+def images_to_movie(
+    *frames, movie_name="aitk_movie", start=0, stop=None, loop=0, duration=100, mp4=True
+):
     """
     Save as animated gif and optionally mp4; show with controls.
     loop - 0 means continually
@@ -270,7 +295,9 @@ def images_to_movie(*frames, movie_name="aitk_movie", start=0, stop=None,
     )
     if mp4:
         retval = os.system(
-            """ffmpeg -y -v quiet -nostats -hide_banner -loglevel error -i {0}.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {0}.mp4""".format(movie_name)
+            """ffmpeg -y -v quiet -nostats -hide_banner -loglevel error -i {0}.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" {0}.mp4""".format(
+                movie_name
+            )
         )
         if retval != 0:
             print(

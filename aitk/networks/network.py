@@ -62,7 +62,6 @@ class Network:
             "tolerance_accuracy_used": False,
             "pca": {},
         }
-        self._initialized = False
         self._watchers = []
         self._fit_inputs = None
         self._fit_targets = None
@@ -171,85 +170,8 @@ class Network:
     def initialize_model(self):
         # Build intermediary models:
         self._build_predict_models()
-        # Set the colormap, etc for each layer:
+        # Config for various layer settings (like 'vshape'):
         self.config["layers"] = {layer.name: {} for layer in self._layers}
-        self.initialize()
-
-    def initialize(self, inputs=None, reset=True):
-        """
-        Set colormap for each layer based on inputs or
-        activation functions per layer.
-
-        Args:
-            inputs: inputs in single pattern format (not a dataset)
-            reset: if True, reset the colormap ranges
-
-        If inputs is None, just make best guess for all layers.
-
-        If inputs is not None, use these for input layer
-        colormap, and all other layers get best guess.
-
-        If reset is True, don't use previous colormap
-        for input layers, but sample from inputs again.
-        If reset is False, consider previous input
-        layer colormap's with new input values.
-        """
-        if not self._layers:
-            raise Exception("Layers must be set before initialization")
-
-        if inputs is None or len(inputs) == 0:
-            # We don't have direct values, so we base colormap
-            # on activation output ranges
-            for layer in self._layers:
-                if layer.name not in self.config["layers"]:
-                    self.config["layers"][layer.name] = {}
-                if self._get_layer_type(layer.name) == "input":
-                    self.config["layers"][layer.name]["colormap"] = ("gray", -2, 2)
-                else:
-                    minmax = self._get_act_minmax(layer.name)
-                    self.config["layers"][layer.name]["colormap"] = (
-                        "gray",
-                        minmax[0],
-                        minmax[1],
-                    )
-        else:
-            self._initialized = True
-            # If reset is true, we set to extremes so any value will adjust
-            # Only do this on input layers:
-            if reset:
-                for layer in self._layers:
-                    if self._get_layer_type(layer.name) == "input":
-                        if layer.name not in self.config["layers"]:
-                            self.config["layers"][layer.name] = {}
-                        # FIXME: set color at some point if image
-                        self.config["layers"][layer.name]["colormap"] = (
-                            "gray",
-                            float("+inf"),  # extreme too big
-                            float("-inf"),  # extreme too small
-                        )
-            # Now we set the minmax for input layer, based on past values
-            # or extremes:
-            for layer in self._layers:
-                # FIXME?
-                outputs = self.propagate_to(inputs, layer.name, return_type="numpy")
-                # FIXME: multiple output banks are lists of numpys
-                color_orig, min_orig, max_orig = self.config["layers"][layer.name][
-                    "colormap"
-                ]
-                min_new, max_new = math.floor(outputs.min()), math.ceil(outputs.max())
-                if min_new != max_new:
-                    self.config["layers"][layer.name]["colormap"] = (
-                        color_orig,
-                        min_new,
-                        max_new,
-                    )
-                else:
-                    # Don't let them be equal:
-                    self.config["layers"][layer.name]["colormap"] = (
-                        color_orig,
-                        min_new - 1,
-                        max_new + 1,
-                    )
 
     def connect(self, from_layer_name=None, to_layer_name=None):
         """ """
@@ -995,9 +917,6 @@ class Network:
         # Everything else is sticky:
         self.config.update(config)
 
-        if not self._initialized and inputs is not None:
-            self.initialize(inputs)
-
         try:
             svg = self.to_svg(
                 inputs=inputs,
@@ -1257,7 +1176,15 @@ class Network:
             vector = vector.reshape(vshape)
 
         try:
-            image = array_to_image(vector, minmax=self._layer_minmax(layer_name))
+            if self[layer_name].__class__.__name__ != "Dense":
+                avg = vector.mean()
+                std = vector.std()
+                minimum = vector.min()
+                maximum = vector.max()
+                minmax = [max(avg - std, minimum), min(avg + std, maximum)]
+            else:
+                minmax = self._get_act_minmax(layer_name)
+            image = array_to_image(vector, minmax=minmax)
         except Exception:
             # Error: make a red image
             image = array_to_image([[[255, 0, 0]], [[255, 0, 0]]])
@@ -2456,9 +2383,8 @@ class Network:
                     image = self.predict_histogram_to(inputs, layer_name)
                 else:  # activations of a dataset
                     try:
-                        image = self.make_image(
-                            layer_name, self.predict_to([inputs], layer_name)[0]
-                        )
+                        outputs = self.propagate_to(inputs, layer_name)
+                        image = self.make_image(layer_name, outputs)
                     except Exception:
                         # Error: make a red image
                         image = array_to_image(
@@ -2841,7 +2767,7 @@ class SimpleNetwork(Network):
                     return Dense(size, activation=activation_function, name=name)
 
         layers = [make_layer(index, layers, activation) for index in range(len(layers))]
-        super().__init__(layers=layers)
+        super().__init__(layers=layers, name=name)
         for i in range(len(layers) - 1):
             self.connect(layers[i].name, layers[i + 1].name)
         if metrics is None:
