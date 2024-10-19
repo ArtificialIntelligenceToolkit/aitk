@@ -113,28 +113,6 @@ def make_input_from_shape(shape):
     return Input(input_shape, name="input")
 
 
-def find_path(network, from_layer, to_layer_name):
-    """
-    Breadth-first search to find shortest path
-    from from_layer to to_layer_name.
-
-    Returns None if there is no path.
-    """
-    # No need to put from_layer.name in path:
-    from_layer.path = []
-    queue = [from_layer]
-    while len(queue) > 0:
-        current = queue.pop()
-        if current.name == to_layer_name:
-            return current.path
-        else:
-            # expand:
-            for layer in network._get_layers_from(current.name):
-                layer.path = current.path + [layer.name]
-                queue.append(layer)
-    return None
-
-
 def scale_output_for_image(vector, minmax, truncate=False):
     """
     Given an activation name (or something else) and an output

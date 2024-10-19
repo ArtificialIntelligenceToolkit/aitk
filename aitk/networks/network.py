@@ -26,7 +26,6 @@ from PIL import Image
 from aitk.utils import array_to_image
 
 from .utils import (
-    find_path,
     get_argument_bindings,
     get_array_shape,
     get_connections,
@@ -921,7 +920,11 @@ class Network:
         key = (tuple([from_layer_name]), to_layer_name)
         if key not in self._predict_models:
             from_layer = self[from_layer_name]
-            path = find_path(self, from_layer, to_layer_name)
+            path = self.find_path(from_layer, to_layer_name)
+            if path is None:
+                raise Exception(
+                    "no path between %r to %r" % (from_layer_name, to_layer_name)
+                )
             # Input should be what next layer expects:
             input_shape = self[path[0]]._build_shapes_dict["input_shape"]
             current = input_layer = make_input_from_shape(input_shape)
@@ -2748,6 +2751,28 @@ class Network:
                 "WARNING: you need Network.compile(metrics=['tolerance_accuracy']) to use tolerance"
             )
         self._tolerance = tolerance
+
+    def find_path(self, from_layer, to_layer_name):
+        """
+        Breadth-first search to find shortest path
+        from from_layer to to_layer_name.
+
+        Returns None if there is no path.
+        """
+        # No need to put from_layer.name in path:
+        path = {}
+        path[from_layer.name] = []
+        queue = [from_layer]
+        while queue:
+            current = queue.pop()
+            if current.name == to_layer_name:
+                return path[current.name]
+            else:
+                # expand:
+                for layer in self._get_layers_from(current.name):
+                    path[layer.name] = path[current.name] + [layer.name]
+                    queue.append(layer)
+        return None
 
 
 class SimpleNetwork(Network):
