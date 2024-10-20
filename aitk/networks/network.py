@@ -1176,20 +1176,41 @@ class Network:
             vector = vector.reshape(vshape)
 
         try:
-            if self[layer_name].__class__.__name__ != "Dense":
-                avg = vector.mean()
-                std = vector.std()
-                minimum = vector.min()
-                maximum = vector.max()
-                minmax = [max(avg - std, minimum), min(avg + std, maximum)]
-            else:
-                minmax = self._get_act_minmax(layer_name)
+            minmax = self._get_dynamic_minmax(layer_name, vector)
             image = array_to_image(vector, minmax=minmax)
         except Exception:
             # Error: make a red image
             image = array_to_image([[[255, 0, 0]], [[255, 0, 0]]])
 
         return image
+
+    def _get_dynamic_minmax(self, layer_name, vector):
+        if self[layer_name].__class__.__name__ == "Dense":
+            # Get minmax based on activation function
+            minmax = self._get_act_minmax(layer_name)
+        elif self[layer_name].__class__.__name__ == "Flatten":
+            # Get minmax from previous layer
+            inputs_to_layer_name = self._get_layers_to(layer_name)
+            minmax = self._get_dynamic_minmax(inputs_to_layer_name[0].name, vector)
+        elif self[layer_name].__class__.__name__ == "InputLayer":
+            # Hardcoded to typical ranges
+            minimum = vector.min()
+            maximum = vector.max()
+            if minimum < 0:
+                minmax = [-1, 1]
+            elif maximum > 100 and maximum <= 255:
+                # Assuming image
+                minmax = [0, 255]
+            else:
+                minmax = [0, 1]
+        else:
+            # Compute minmax based on mean +/- std
+            avg = vector.mean()
+            std = vector.std()
+            minimum = vector.min()
+            maximum = vector.max()
+            minmax = [max(avg - std, minimum), min(avg + std, maximum)]
+        return minmax
 
     def _make_color(self, item):
         if isinstance(item, numbers.Number):
@@ -1359,24 +1380,17 @@ class Network:
         Note: +/- 2 represents infinity
         """
         layer = self[layer_name]
-        if layer.__class__.__name__ == "Flatten":
-            in_layer = self._get_layers_to(layer_name)[0]
-            return self._get_act_minmax(in_layer.name)
-        elif self._get_layer_type(layer_name) == "input":
-            color, mini, maxi = self._get_colormap(layer)
-            return (mini, maxi)
-        else:  # try to get from activation function
-            activation = self._get_activation_name(layer)
-            if activation in ["tanh", "softsign"]:
-                return (-1, +1)
-            elif activation in ["sigmoid", "softmax", "hard_sigmoid"]:
-                return (0, +1)
-            elif activation in ["relu", "elu", "softplus"]:
-                return (0, +2)
-            elif activation in ["selu", "linear"]:
-                return (-2, +2)
-            else:  # default, or unknown activation function
-                return (-2, +2)
+        activation = self._get_activation_name(layer)
+        if activation in ["tanh", "softsign"]:
+            return (-1, +1)
+        elif activation in ["sigmoid", "softmax", "hard_sigmoid"]:
+            return (0, +1)
+        elif activation in ["relu", "elu", "softplus"]:
+            return (0, +2)
+        elif activation in ["selu", "linear"]:
+            return (-2, +2)
+        else:  # default, or unknown activation function
+            return (0, +2)
 
     def _get_border_color(self, layer_name):
         if (
@@ -2700,7 +2714,7 @@ class SimpleNetwork(Network):
     def __init__(
         self,
         *layers,
-        name="SimpleNetwork",
+        name="SequentialNetwork",
         activation="sigmoid",
         loss="mse",
         optimizer="sgd",
@@ -2762,7 +2776,7 @@ class SimpleNetwork(Network):
                         size, activation_function = size
                     else:
                         raise Exception(
-                            "Invalid SimpleNetwork layer representation: %r" % size
+                            "Invalid SquentialNetwork layer representation: %r" % size
                         )
                     return Dense(size, activation=activation_function, name=name)
 
@@ -2792,3 +2806,6 @@ class SimpleNetwork(Network):
         weights, etc.
         """
         self._watchers[:] = []
+
+
+SequentialNetwork = SimpleNetwork
