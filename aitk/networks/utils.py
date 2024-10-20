@@ -37,15 +37,18 @@ class Line:
         self.angle = math.atan2(lengthY, lengthX)
 
 
-def get_layer_name(layer):
-    from tensorflow.python.framework.ops import Tensor
-    from tensorflow.keras.models import Model
-
-    if isinstance(layer, Tensor):
-        m = Model(inputs=layer, outputs=layer)
-        return m.layers[0].name
+def get_array_shape(array):
+    if isinstance(array, list):
+        return [len(array)] + get_array_shape(array[0])
     else:
+        return []
+
+
+def get_layer_name(layer):
+    if hasattr(layer, "name"):
         return layer.name
+    else:
+        return "layer"
 
 
 def get_error_colormap():
@@ -110,101 +113,18 @@ def make_input_from_shape(shape):
     return Input(input_shape, name="input")
 
 
-def find_path(from_layer, to_layer_name):
-    """
-    Breadth-first search to find shortest path
-    from from_layer to to_layer_name.
-
-    Returns None if there is no path.
-    """
-    # No need to put from_layer.name in path:
-    from_layer.path = []
-    queue = [from_layer]
-    while len(queue) > 0:
-        current = queue.pop()
-        if current.name == to_layer_name:
-            return current.path
-        else:
-            # expand:
-            for node in current.outbound_nodes:
-                layer = node.outbound_layer
-                layer.path = current.path + [layer.name]
-                queue.append(layer)
-    return None
-
-
-def gather_nodes(layers):
-    nodes = []
-    for layer in layers:
-        for node in layer.inbound_nodes:
-            if node not in nodes:
-                nodes.append(node)
-
-        for node in layer.outbound_nodes:
-            if node not in nodes:
-                nodes.append(node)
-    return nodes
-
-#def topological_sort_connections(input_layers, connections):
-#    layer_list = input_layers[:]
-#    while not done:
-#        for connection in connections:
-
-def topological_sort(layers):
-    """
-    Given a keras model and list of layers, produce a topological
-    sorted list, from input(s) to output(s).
-    """
-    nodes = topological_sort_nodes(layers)
-    layer_list = []
-    for node in nodes:
-        if hasattr(node.inbound_layers, "__iter__"):
-            for layer in node.inbound_layers:
-                if layer not in layer_list:
-                    layer_list.append(layer)
-        else:
-            if node.inbound_layers not in layer_list:
-                layer_list.append(node.inbound_layers)
-
-        if node.outbound_layer not in layer_list:
-            layer_list.append(node.outbound_layer)
-    return layer_list
-
-
-def topological_sort_nodes(layers):
-    """
-    Given a keras model and list of layers, produce a topological
-    sorted list, from input(s) to output(s).
-    """
-    # Initilize all:
-    nodes = gather_nodes(layers)
-    for node in nodes:
-        node.visited = False
-    stack = []
-    for node in reversed(nodes):
-        if not node.visited:
-            visit_node(node, stack)
-    return reversed(stack)
-
-
-def visit_node(node, stack):
-    """
-    Utility function for topological_sort.
-    """
-    node.visited = True
-    if node.outbound_layer:
-        for subnode in node.outbound_layer.outbound_nodes:
-            if not subnode.visited:
-                visit_node(subnode, stack)
-    stack.append(node)
-
-
 def scale_output_for_image(vector, minmax, truncate=False):
     """
     Given an activation name (or something else) and an output
     vector, scale the vector.
     """
-    return rescale_numpy_array(vector, minmax, (0, 255), "uint8", truncate=truncate,)
+    return rescale_numpy_array(
+        vector,
+        minmax,
+        (0, 255),
+        "uint8",
+        truncate=truncate,
+    )
 
 
 def rescale_numpy_array(a, old_range, new_range, new_dtype, truncate=False):
@@ -246,7 +166,8 @@ def svg_to_image(svg, config):
     else:
         raise Exception("svg_to_image takes a str, rather than %s" % type(svg))
 
-    image_bytes = cairosvg.svg2png(bytestring=svg)
+    # FIXME: if not in notebook, need output_height?
+    image_bytes = cairosvg.svg2png(bytestring=svg)  # , output_height=INT)
     image = Image.open(io.BytesIO(image_bytes))
     if "background_color" in config:
         # create a blank image, with background:
@@ -458,3 +379,22 @@ def is_keras_tensor(item):
         return K.is_keras_tensor(item)
     except Exception:
         return False
+
+
+def get_connections(model):
+    connections = []
+    for layer in model.layers:
+        for node in layer._inbound_nodes:
+            for parent_node in node.parent_nodes:
+                connections.append((parent_node.operation.name, layer.name))
+    return connections
+
+
+def get_layer_input_tensor(layer):
+    """
+    Get the layer, or layer._input_tensor
+    """
+    if hasattr(layer, "_input_tensor"):
+        return layer._input_tensor
+    else:
+        return layer

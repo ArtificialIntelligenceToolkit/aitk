@@ -2,7 +2,7 @@
 # ******************************************************
 # aitk.networks: Keras model wrapper with visualizations
 #
-# Copyright (c) 2021 Douglas S. Blank
+# Copyright (c) 2021-2024 Douglas S. Blank
 #
 # https://github.com/ArtificialIntelligenceToolkit/aitk.networks
 #
@@ -16,56 +16,57 @@ import math
 import numbers
 import operator
 import random
-import sys
+from types import FunctionType
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
+import tensorflow.keras.backend as K
 from matplotlib import cm
-from PIL import Image, ImageDraw
+from PIL import Image
+from tensorflow.keras.layers import Concatenate, Dense, InputLayer, Layer
+from tensorflow.keras.models import Model
+
+from aitk.utils import array_to_image
 
 from .utils import (
-    find_path,
     get_argument_bindings,
+    get_array_shape,
+    get_connections,
     get_error_colormap,
-    get_layer_name,
+    get_layer_input_tensor,
     get_templates,
     image_to_uri,
     is_keras_tensor,
     make_input_from_shape,
     render_curve,
-    scale_output_for_image,
     svg_to_image,
-    topological_sort,
 )
-
-from aitk.utils import array_to_image
 
 try:
     from IPython.display import HTML, clear_output, display
 except ImportError:
     HTML = None
 
+
 class Network:
     """
     Wrapper around a keras.Model.
     """
-    def __init__(self, model=None, layers=None, **config):
-        self._initialized = False
+
+    def __init__(self, model=None, layers=None, name="Network", **config):
+        if model is not None and layers is not None:
+            raise Exception("Network() takes model or layers, not both")
+
+        self._state = {
+            "tolerance_accuracy_used": False,
+            "pca": {},
+        }
         self._watchers = []
         self._fit_inputs = None
         self._fit_targets = None
-        self._init_state()
-        self._model = model
-        # {name: (layer, [incoming], [outgoing])...}
-        if layers is not None:
-            self._pre_layers = {get_layer_name(layer): layer
-                                for layer in layers}
-            self._name = config.get("name", "Network")
-            self._show_connection_help()
-        else:
-            self._pre_layers = {}
-            self._name = None
         self._connections = []
+        self._model = None
         # Place to put models between layers:
         self._predict_models = {}
         # Place to map layer to its input layers:
@@ -75,9 +76,14 @@ class Network:
         self._history = {"weights": [], "metrics": []}
         self._epoch = 0
         self._tolerance = 0.1
-        name = self._model.name if self._model is not None else "Network"
+        self._name = name
+        self._layers = []
+        self._layers_map = {}
+        self.input_bank_order = []
+        self.output_bank_order = []
+        self._level_ordering = []
         self.config = {
-            "name": name,  # for svg title
+            "name": self._name,  # for svg title
             "class_id": "keras-network",  # for svg network classid
             "id": "keras-network",  # for svg id
             "font_size": 12,  # for svg
@@ -110,152 +116,91 @@ class Network:
             # layer_name: {vshape, feature, keep_aspect_ratio, visible
             # colormap, border_color, border_width}
         }
-        # Get all of the layers, even implicit ones, in order:
-        if self._model is not None:
-            self.initialize_model()
-        else:
-            self._layers = []
-            self._layers_map = {}
-            self.input_bank_order = []
-            self.output_bank_order = []
-            self._level_ordering = []
-
         # Override settings:
         self.set_config(**config)
+        if model:
+            self._model = model
+            self._name = self._model.name
+            for layer in model.layers:
+                self.add(layer)
+            self._connections = get_connections(model)
+            self.compile()
+        elif layers:
+            for layer in layers:
+                self.add(layer)
+        # When we are done here, we are in 1 of 2 states:
+        # 1. A model, ready to go
+        # 2. Network, ready for more add(), connect(), compile()
 
     def __getattr__(self, attr):
+        if self._model is None:
+            raise Exception("Model has not yet been compiled")
         return getattr(self._model, attr)
 
     def __getitem__(self, layer_name):
         return self._layers_map.get(layer_name, None)
 
-    def _init_state(self):
-        if "_state" not in dir(self):
-            self._state = {
-                "tolerance_accuracy_used": False,
-                "pca": {},
-            }
+    def add(self, layer):
+        """
+        Add a layer to the network.
+        """
+        if isinstance(layer, FunctionType):
+            raise Exception("Don't use Input; use InputLayer")
+
+        if not isinstance(layer, Layer):
+            raise Exception("Network.add() requires a Layer")
+
+        # Let's find a good name for the layer:
+        name = layer.name
+        if name.startswith("keras_tensor"):
+            name = "input" + name[12:]
+
+        if name in self._layers_map:
+            raise Exception("The name %r is already used" % name)
+
+        # Add the layer:
+        layer.name = name
+        self._layers.append(layer)
+        self._layers_map[layer.name] = layer
 
     @property
     def model(self):
         return self._model
 
-    def _show_connection_help(self):
-        print("Connect layers with Network.connect(NAME, NAME) where NAMEs are in:")
-        print("    ", list(self._pre_layers.keys()))
-
     def initialize_model(self):
-        self._layers = topological_sort(self._model.layers)
-        # Make a mapping of names to layers:
-        self._layers_map = {layer.name: layer for layer in self._layers}
-        # Get the input bank names, in order:
-        self.input_bank_order = self._get_input_layers()
-        # Get the output bank names, in order:
-        self.output_bank_order = self._get_output_layers()
-        # Get the best (shortest path) between layers:
-        self._level_ordering = self._get_level_ordering()
         # Build intermediary models:
         self._build_predict_models()
-        # Setup layer config dicts:
+        # Config for various layer settings (like 'vshape'):
         self.config["layers"] = {layer.name: {} for layer in self._layers}
-        # Set the colormap, etc for each layer:
-        self.initialize()
-
-    def initialize(self, inputs=None, reset=True):
-        """
-        Set colormap for each layer based on inputs or
-        activation functions per layer.
-
-        Args:
-            inputs: inputs in single pattern format (not a dataset)
-            reset: if True, reset the colormap ranges
-
-        If inputs is None, just make best guess for all layers.
-
-        If inputs is not None, use these for input layer
-        colormap, and all other layers get best guess.
-
-        If reset is True, don't use previous colormap
-        for input layers, but sample from inputs again.
-        If reset is False, consider previous input
-        layer colormap's with new input values.
-        """
-        if inputs is None:
-            # We don't have direct values, so we base colormap
-            # on activation output ranges
-            for layer in self._layers:
-                if layer.name not in self.config["layers"]:
-                    self.config["layers"][layer.name] = {}
-                if self._get_layer_type(layer.name) == "input":
-                    self.config["layers"][layer.name]["colormap"] = ("gray", -2, 2)
-                else:
-                    minmax = self._get_act_minmax(layer.name)
-                    self.config["layers"][layer.name]["colormap"] = ("gray", minmax[0], minmax[1])
-        else:
-            self._initialized = True
-            input_dataset = self.input_to_dataset(inputs)
-            # If reset is true, we set to extremes so any value will adjust
-            # Only do this on input layers:
-            if reset:
-                for layer in self._layers:
-                    if self._get_layer_type(layer.name) == "input":
-                        if layer.name not in self.config["layers"]:
-                            self.config["layers"][layer.name] = {}
-                        # FIXME: set color at some point if image
-                        self.config["layers"][layer.name]["colormap"] = (
-                            "gray",
-                            float("+inf"), # extreme too big
-                            float("-inf"), # extreme too small
-                        )
-            # Now we set the minmax for input layer, based on past values
-            # or extremes:
-            for layer in self._layers:
-                outputs = self.predict_to(input_dataset, layer.name)
-                color_orig, min_orig, max_orig = self.config["layers"][layer.name]["colormap"]
-                min_new, max_new = math.floor(outputs.min()), math.ceil(outputs.max())
-                if min_new != max_new:
-                    self.config["layers"][layer.name]["colormap"] = (color_orig, min_new, max_new)
-                else:
-                    # Don't let them be equal:
-                    self.config["layers"][layer.name]["colormap"] = (
-                        color_orig,
-                        min_new - 1,
-                        max_new + 1,
-                    )
 
     def connect(self, from_layer_name=None, to_layer_name=None):
-        """
-        """
-        if len(self._pre_layers) == 0:
+        """ """
+        if len(self._layers) == 0:
             raise Exception("no layers have been added")
         if from_layer_name is not None and not isinstance(from_layer_name, str):
             raise Exception("from_layer_name should be a string or None")
         if to_layer_name is not None and not isinstance(to_layer_name, str):
             raise Exception("to_layer_name should be a string or None")
         if from_layer_name is None and to_layer_name is None:
-            #if (any([layer.outgoing_connections for name, layer in self.layers]) or
-            #    any([layer.incoming_connections for layer in self.layers])):
-            #    raise Exception("layers already have connections")
-            for i in range(len(self._pre_layers) - 1):
-                names = list(self._pre_layers)
-                from_layer = self._pre_layers[names[i]]
-                to_layer = self._pre_layers[names[i + 1]]
+            for i in range(len(self._layers) - 1):
+                from_layer = self._layers[i]
+                to_layer = self._layers[i + 1]
                 self.connect(from_layer.name, to_layer.name)
         else:
             if from_layer_name == to_layer_name:
                 raise Exception("self connections are not allowed")
             if not isinstance(from_layer_name, str):
                 raise Exception("from_layer_name should be a string")
-            if from_layer_name not in self._pre_layers:
-                raise Exception('unknown layer: %s' % from_layer_name)
+            if from_layer_name not in self._layers_map:
+                raise Exception("unknown layer: %s" % from_layer_name)
             if not isinstance(to_layer_name, str):
                 raise Exception("to_layer_name should be a string")
-            if to_layer_name not in self._pre_layers:
-                raise Exception('unknown layer: %s' % to_layer_name)
-            from_layer = self._pre_layers[from_layer_name]
-            to_layer = self._pre_layers[to_layer_name]
+            if to_layer_name not in self._layers_map:
+                raise Exception("unknown layer: %s" % to_layer_name)
+            from_layer = self[from_layer_name]
+            to_layer = self[to_layer_name]
             # Check for input going to a Dense to warn:
-            #if len(from_layer.shape) > 2 and to_layer.__class__.__name__ == "Dense":
+            # if len(from_layer.shape) > 2 and to_layer.__class__.__name__ == "Dense":
             #    print("WARNING: connected multi-dimensional input layer '%s' to layer '%s'; consider adding a FlattenLayer between them" % (
             #        from_layer.name, to_layer.name), file=sys.stderr)
             self._connections.append((from_layer_name, to_layer_name))
@@ -276,7 +221,7 @@ class Network:
             * monitor: (str) metric to monitor to determine whether to stop
             * callbacks: (list) list of callbacks
         """
-        from .callbacks import UpdateCallback, make_early_stop, make_stop, make_save
+        from .callbacks import UpdateCallback, make_early_stop, make_save, make_stop
 
         # plot = True
         # if plot:
@@ -284,7 +229,6 @@ class Network:
         #    mpl_backend = matplotlib.get_backend()
         # else:
         #    mpl_backend = None
-
         # Get any kwargs that are not standard:
         report_rate = kwargs.pop("report_rate", 1)
         # Early stopping and Stop on Accuracy, Val_accuracy
@@ -328,8 +272,14 @@ class Network:
         kwargs["verbose"] = 0
         kwargs["initial_epoch"] = self._epoch
 
-        self._fit_inputs = kwargs.get("x", None) # inputs
-        self._fit_targets = kwargs.get("y", None) # targets
+        shape = get_array_shape(kwargs.get("x"))
+        # TODO: check all types of networks
+        if shape:
+            kwargs["x"] = np.array(kwargs["x"])
+            kwargs["y"] = np.array(kwargs["y"])
+
+        self._fit_inputs = kwargs.get("x")  # inputs
+        self._fit_targets = kwargs.get("y")  # targets
 
         # call underlying model fit:
         try:
@@ -342,13 +292,23 @@ class Network:
             # FIXME: don't save if didn't go through loop?
             self._history["weights"].append((self._epoch, self.get_weights()))
 
-
-        metrics = {key: history.history[key][-1] for key in history.history
-                   if len(history.history[key]) > 0}
+        metrics = {
+            key: history.history[key][-1]
+            for key in history.history
+            if len(history.history[key]) > 0
+        }
 
         ## FIXME: getting epochs by keyword:
-        print("Epoch %d/%d %s" % (self._epoch, kwargs["epochs"], " - ".join(
-            ["%s: %s" % (key, value) for (key, value) in metrics.items()])))
+        print(
+            "Epoch %d/%d %s"
+            % (
+                self._epoch,
+                kwargs["epochs"],
+                " - ".join(
+                    ["%s: %s" % (key, value) for (key, value) in metrics.items()]
+                ),
+            )
+        )
         return history
 
     def in_console(self, mpl_backend: str) -> bool:
@@ -401,14 +361,13 @@ class Network:
             index = random.randint(0, self.get_input_length(self._fit_inputs) - 1)
             inputs = self.get_input_from_dataset(index, self._fit_inputs)
             targets = self.get_target_from_dataset(index, self._fit_targets)
-            self.propagate(inputs, targets) # update watchers
+            self.propagate(inputs, targets)  # update watchers
 
         metrics = [list(history[1].keys()) for history in self._history["metrics"]]
         metrics = set([item for sublist in metrics for item in sublist])
 
         def match_acc(name):
-            return (name.endswith("acc") or
-                    name.endswith("accuracy"))
+            return name.endswith("acc") or name.endswith("accuracy")
 
         def match_val(name):
             return name.startswith("val_")
@@ -445,7 +404,7 @@ class Network:
                 loss_ax.plot(x_values, y_values, label=metric, color="orange")
             elif match_acc(metric) and not match_val(metric) and acc_ax is not None:
                 acc_ax.plot(x_values, y_values, label=metric, color="b")  # blue
-            elif match_acc(metric) and match_val(metric)  and acc_ax is not None:
+            elif match_acc(metric) and match_val(metric) and acc_ax is not None:
                 acc_ax.plot(x_values, y_values, label=metric, color="c")  # cyan
             # FIXME: add a chart for each metric
             # else:
@@ -463,7 +422,6 @@ class Network:
             acc_ax.set_ylabel("Accuracy")
             acc_ax.legend(loc="best")
 
-
         if True or format == "svg":
             # FIXME: work in console
             # if (callback is not None and not callback.in_console) or format == "svg":
@@ -480,7 +438,7 @@ class Network:
             plt.pause(0.01)
             # plt.show(block=False)
 
-    def _extract_inputs(self, inputs, input_names):
+    def _prepare_input(self, inputs, input_names):
         """
         Get the input_names from the inputs
         """
@@ -489,15 +447,16 @@ class Network:
         if isinstance(inputs, dict):
             return [np.array(inputs[name]) for name in input_names]
         elif len(self.input_bank_order) == 1:
-            return inputs
+            return np.array([inputs])
         else:
             return [
-                np.array(inputs[index])
+                np.array([inputs[index]])
                 for index in [self.input_bank_order.index(name) for name in input_names]
             ]
 
     def build_model(self):
-        from tensorflow.keras.models import Model
+        if len(self._connections) == 0:
+            raise Exception("Need to connect layers before building model")
 
         # Assumes layers either added or passed in via layers
         # and connected via Network.connect()
@@ -505,45 +464,89 @@ class Network:
         tos = [connect[1] for connect in self._connections]
         input_layers = []
         output_layers = []
-        for layer_name in self._pre_layers:
-            if layer_name not in tos:
-                input_layers.append(layer_name)
-            if layer_name not in froms:
-                output_layers.append(layer_name)
-        outputs = [self._get_tensor_to(output_layer)
-                   for output_layer in output_layers]
-        inputs = [self._pre_layers[layer_name]
-                  for layer_name in input_layers]
+        for layer in self._layers:
+            if layer.name not in tos:
+                input_layers.append(layer.name)
+            if layer.name not in froms:
+                output_layers.append(layer.name)
+        # Now we build the model:
+        outputs = [self._build_graph_to(output_layer) for output_layer in output_layers]
+        inputs = [self[layer_name]._input_tensor for layer_name in input_layers]
         self._model = Model(inputs=inputs, outputs=outputs, name=self._name)
-        self.initialize_model()
 
     def _get_layers_to(self, layer_name):
-        return [connection[0] for connection in self._connections
-                if connection[1] == layer_name]
+        return [
+            self[connection[0]]
+            for connection in self._connections
+            if connection[1] == layer_name
+        ]
 
-    def _get_tensor_to(self, layer_name):
-        from tensorflow.keras.layers import Concatenate
+    def _get_layers_from(self, layer_name):
+        return [
+            self[connection[1]]
+            for connection in self._connections
+            if connection[0] == layer_name
+        ]
 
+    def topological_sort(self, layers, input_layers):
+        for layer in layers:
+            layer.visited = False
+        # Next gather them:
+        sorted_layers = []
+        queue = input_layers
+        while queue:
+            current = queue.pop(0)
+            if not current.visited:
+                sorted_layers.append(current)
+                current.visited = True
+                queue.extend(self._get_layers_from(current.name))
+        for layer in layers:
+            if layer.visited is False:
+                raise Exception(
+                    "Layer %r is not part of the network graph" % layer.name
+                )
+        return sorted_layers
+
+    def _build_graph_to(self, layer_name):
+        """
+        Given the name of a layer, build all of the models
+        to that layer by calling the Keras layer as a function.
+        """
         # recursive
         layers = self._get_layers_to(layer_name)
         if len(layers) == 0:
             # An input layer:
-            return self._pre_layers[layer_name]
+            return self[layer_name]
 
-        incoming_layers = [self._get_tensor_to(incoming_layer_name)
-                           for incoming_layer_name in layers]
+        incoming_layers = [
+            self._build_graph_to(incoming_layer.name) for incoming_layer in layers
+        ]
 
         if len(incoming_layers) == 1:
             incoming_layer = incoming_layers[0]
-        else: # more than one
-            incoming_layer = Concatenate()(incoming_layers)
+        else:  # more than one
+            incoming_layer = Concatenate()(
+                [get_layer_input_tensor(layer) for layer in incoming_layers]
+            )
 
-        layer = self._pre_layers[layer_name]
-        return layer(incoming_layer)
+        if isinstance(incoming_layer, InputLayer):
+            incoming_layer = incoming_layer._input_tensor
+
+        layer = self[layer_name]
+        return layer(inputs=incoming_layer)
 
     def compile(self, *args, **kwargs):
         """
+        The last step before you run a network.
         """
+        # _layers, _connections already set
+        self._layers = self.topological_sort(self._layers, self._get_input_layers())
+        # Get the input bank names, in order:
+        self.input_bank_order = [layer.name for layer in self._get_input_layers()]
+        # Get the output bank names, in order:
+        self.output_bank_order = [layer.name for layer in self._get_output_layers()]
+        # Get the best (shortest path) between layers:
+        self._level_ordering = self._get_level_ordering()
         # First, build model if necessary:
         if self._model is None:
             self.build_model()
@@ -553,19 +556,60 @@ class Network:
             metrics = [self.get_metric(metric) for metric in metrics]
             kwargs["metrics"] = metrics
         # Let the standard keras model do the rest:
-        return self._model.compile(*args, **kwargs)
+        results = self._model.compile(*args, **kwargs)
+        self.initialize_model()
+        return results
 
+    def _post_process_outputs(self, outputs, return_type):
+        def numpy(item):
+            if hasattr(item, "numpy"):
+                return item.numpy()
+            else:
+                return item
 
-    def predict(self, inputs):
+        if len(self.output_bank_order) == 1:
+            if return_type == "list":
+                return numpy(outputs)[0].tolist()
+            elif return_type == "numpy":
+                return numpy(outputs)[0]
+        else:
+            if return_type == "list":
+                return [numpy(item)[0].tolist() for item in outputs]
+            elif return_type == "numpy":
+                return [numpy(item)[0] for item in outputs]
+
+    def _post_process_dataset_outputs(self, outputs, return_type):
+        def numpy(item):
+            if hasattr(item, "numpy"):
+                return item.numpy()
+            else:
+                return item
+
+        if len(self.output_bank_order) == 1:
+            if return_type == "list":
+                return numpy(outputs).tolist()
+            elif return_type == "numpy":
+                return numpy(outputs)
+        else:
+            if return_type == "list":
+                return [numpy(item).tolist() for item in outputs]
+            elif return_type == "numpy":
+                return [numpy(item) for item in outputs]
+
+    def propagate(self, inputs, return_type="list"):
         """
         Propagate input patterns to a bank in the network.
         """
-        input_vectors = self._extract_inputs(inputs, self.input_bank_order)
+        if self._model is None:
+            raise Exception("Model has not yet been compiled")
+
+        input_vectors = self._prepare_input(inputs, self.input_bank_order)
         try:
-            outputs = self._model(input_vectors, training=False).numpy()
-        except Exception as exc:
+            outputs = self._model(input_vectors, training=False)
+        except Exception:
             input_layers_shapes = [
-                self._get_raw_output_shape(layer_name) for layer_name in self.input_bank_order
+                self._get_raw_output_shape(layer_name)
+                for layer_name in self.input_bank_order
             ]
             hints = ", ".join(
                 [
@@ -578,7 +622,7 @@ class Network:
                 % hints
             ) from None
 
-        return outputs
+        return self._post_process_outputs(outputs, return_type)
 
     def set_pca_spaces(self, inputs):
         """
@@ -588,7 +632,7 @@ class Network:
 
         for layer in self.layers:
             pca = PCA(2)
-            hidden_raw = self.predict_to(inputs, layer.name)
+            hidden_raw = self.predict_to(inputs, layer.name, return_type="numpy")
             try:
                 pca_space = pca.fit(hidden_raw)
             except ValueError:
@@ -603,10 +647,16 @@ class Network:
             return len(inputs[0])
 
     def predict_histogram_to(self, inputs, layer_name):
-        hidden_raw = self.predict_to(inputs, layer_name)
+        """
+        Entire dataset
+        """
+        if self._model is None:
+            raise Exception("Model has not yet been compiled")
+
+        hidden_raw = self.predict_to(inputs, layer_name, return_type="numpy")
 
         plt.hist(hidden_raw)
-        plt.axis('off')
+        plt.axis("off")
         fp = io.BytesIO()
         plt.savefig(fp, format="png")
         plt.close()
@@ -614,22 +664,25 @@ class Network:
         return image
 
     def predict_pca_to(self, inputs, layer_name, colors, sizes):
+        if self._model is None:
+            raise Exception("Model has not yet been compiled")
+
         if layer_name not in self._state["pca"]:
             raise Exception("Need to set_pca_spaces first")
 
-        hidden_raw = self.predict_to(inputs, layer_name)
+        hidden_raw = self.predict_to(inputs, layer_name, return_type="numpy")
         pca_space = self._state["pca"][layer_name]
         if pca_space is not None:
             hidden_pca = pca_space.transform(hidden_raw)
-            x = hidden_pca[:,0]
-            y = hidden_pca[:,1]
+            x = hidden_pca[:, 0]
+            y = hidden_pca[:, 1]
         else:
             # Only one hidden layer unit; we'll use zeros for Y axis
             x = hidden_raw
             y = np.zeros(len(hidden_raw))
 
         plt.scatter(x, y, c=colors, s=sizes)
-        plt.axis('off')
+        plt.axis("off")
         fp = io.BytesIO()
         plt.savefig(fp, format="png")
         plt.close()
@@ -651,8 +704,10 @@ class Network:
         sizes=None,
         **config,
     ):
-        """
-        """
+        """ """
+        if self._model is None:
+            raise Exception("Model has not yet been compiled")
+
         # This are not sticky; need to set each time:
         config["rotate"] = rotate
         config["scale"] = scale
@@ -663,8 +718,9 @@ class Network:
             self.set_pca_spaces(inputs)
 
         try:
-            svg = self.to_svg(inputs=inputs, targets=targets, mode="pca",
-                              colors=colors, sizes=sizes)
+            svg = self.to_svg(
+                inputs=inputs, targets=targets, mode="pca", colors=colors, sizes=sizes
+            )
         except KeyboardInterrupt:
             raise KeyboardInterrupt() from None
 
@@ -691,7 +747,6 @@ class Network:
         else:
             raise ValueError("unable to convert to return_type %r" % return_type)
 
-
     def predict_histogram(
         self,
         inputs=None,
@@ -704,8 +759,10 @@ class Network:
         clear=True,
         **config,
     ):
-        """
-        """
+        """ """
+        if self._model is None:
+            raise Exception("Model has not yet been compiled")
+
         # This are not sticky; need to set each time:
         config["rotate"] = rotate
         config["scale"] = scale
@@ -740,8 +797,7 @@ class Network:
         else:
             raise ValueError("unable to convert to return_type %r" % return_type)
 
-
-    def predict_to(self, inputs, layer_name):
+    def predict_to(self, inputs, layer_name, return_type="list"):
         """
         Propagate input patterns to a bank in the network.
 
@@ -752,12 +808,15 @@ class Network:
         Returns:
             a numpy array
         """
+        if self._model is None:
+            raise Exception("Model has not yet been compiled")
+
         input_names = self._input_layer_names[layer_name]
         model = self._predict_models[input_names, layer_name]
-        input_vectors = self._extract_inputs(inputs, input_names)
+        inputs = self._prepare_dataset_inputs(inputs)
         try:
-            outputs = model(input_vectors, training=False).numpy()
-        except Exception as exc:
+            outputs = model(inputs, training=False)
+        except Exception:
             input_layers_shapes = [
                 self._get_raw_output_shape(layer_name) for layer_name in input_names
             ]
@@ -772,20 +831,26 @@ class Network:
                 % hints
             ) from None
 
-        return outputs
+        return self._post_process_dataset_outputs(outputs, return_type)
 
     def predict_from(self, inputs, from_layer_name, to_layer_name):
         """
         Propagate patterns from one bank to another bank in the network.
         """
-        from tensorflow.keras.models import Model
+        if self._model is None:
+            raise Exception("Model has not yet been compiled")
 
         key = (tuple([from_layer_name]), to_layer_name)
         if key not in self._predict_models:
             from_layer = self[from_layer_name]
-            path = find_path(from_layer, to_layer_name)
+            path = self.find_path(from_layer, to_layer_name)
+            if path is None:
+                raise Exception(
+                    "no path between %r to %r" % (from_layer_name, to_layer_name)
+                )
             # Input should be what next layer expects:
-            current = input_layer = make_input_from_shape(self[path[0]].input_shape)
+            input_shape = self[path[0]]._build_shapes_dict["input_shape"]
+            current = input_layer = make_input_from_shape(input_shape)
             for layer_name in path:
                 current = self[layer_name](current)
             self._predict_models[key] = Model(inputs=input_layer, outputs=current)
@@ -852,12 +917,14 @@ class Network:
         # Everything else is sticky:
         self.config.update(config)
 
-        if not self._initialized and inputs is not None:
-            self.initialize(inputs)
-
         try:
-            svg = self.to_svg(inputs=inputs, targets=targets, mode="activation",
-                              colors=None, sizes=None)
+            svg = self.to_svg(
+                inputs=inputs,
+                targets=targets,
+                mode="activation",
+                colors=None,
+                sizes=None,
+            )
         except KeyboardInterrupt:
             raise KeyboardInterrupt() from None
 
@@ -880,6 +947,9 @@ class Network:
         clear=True,
         **config,
     ):
+        if self._model is None:
+            raise Exception("Model has not yet been compiled")
+
         if return_type is None:
             try:
                 get_ipython()  # noqa: F821
@@ -887,9 +957,19 @@ class Network:
             except Exception:
                 return_type = "image"
 
+        # input_vectors = self._prepare_input(inputs, self.input_bank_order)
+
         if return_type == "html":
-            svg = self.get_image(inputs, targets, show_error, show_targets, "svg",
-                                 rotate, scale, **config)
+            svg = self.get_image(
+                inputs,
+                targets,
+                show_error,
+                show_targets,
+                "svg",
+                rotate,
+                scale,
+                **config,
+            )
             if HTML is not None:
                 if clear:
                     clear_output(wait=True)
@@ -899,13 +979,20 @@ class Network:
                     "need to install `IPython` or use Network.display(return_type='image')"
                 )
         else:
-            image = self.get_image(inputs, targets, show_error, show_targets, return_type,
-                                   rotate, scale, **config)
+            image = self.get_image(
+                inputs,
+                targets,
+                show_error,
+                show_targets,
+                return_type,
+                rotate,
+                scale,
+                **config,
+            )
             return image
 
     def watch_weights(self, to_name):
-        """
-        """
+        """ """
         from .watchers import WeightWatcher
 
         name = "WeightWatcher: to %s" % (to_name,)
@@ -919,8 +1006,7 @@ class Network:
         display(watcher._widget)
 
     def watch_layer(self, layer_name):
-        """
-        """
+        """ """
         from .watchers import LayerWatcher
 
         name = "LayerWatcher: %s" % (layer_name,)
@@ -933,14 +1019,14 @@ class Network:
 
         display(watcher._widget)
 
-    def watch(self,
+    def watch(
+        self,
         show_error=None,
         show_targets=None,
         rotate=None,
         scale=None,
     ):
-        """
-        """
+        """ """
         from .watchers import NetworkWatcher
 
         name = "NetworkWatcher"
@@ -954,10 +1040,11 @@ class Network:
             widget = watcher.get_widget(show_error, show_targets, rotate, scale)
         display(widget)
 
-    def propagate(self,
-                  inputs,
-                  targets=None,
-                  show=True,
+    def predict(
+        self,
+        inputs,
+        targets=None,
+        show=True,
     ):
         """
         Update all of the watchers whatever they may be watching,
@@ -966,32 +1053,31 @@ class Network:
         if show:
             for watcher in self._watchers:
                 watcher.update(inputs, targets)
-        dataset = self.input_to_dataset(inputs)
-        # FIXME: rather than just the first, format in case
-        # of multiple output layers
-        return self._model(dataset, training=False)[0].numpy()
+        inputs = self._prepare_dataset_inputs(inputs)
+        outputs = self._model(inputs, training=False)
+        return outputs
 
-    def propagate_to(self,
-                     inputs,
-                     layer_name,
-                     return_type=None,
-                     channel=None,
+    def propagate_to(
+        self,
+        inputs,
+        layer_name,
+        return_type="numpy",
+        channel=None,
     ):
-        dataset = self.input_to_dataset(inputs)
-        # FIXME: rather than just the first, format in case
-        # of multiple output layers
-        array = self.predict_to(dataset, layer_name)
-        # FIXME: get output banks
-        # Strip out just the single return row from one bank
-        array = array[0]
+        input_names = self._input_layer_names[layer_name]
+        model = self._predict_models[input_names, layer_name]
+        input_vectors = self._prepare_input(inputs, input_names)
+        array = model(input_vectors, training=False)
+
         if return_type == "image":
             return self._layer_array_to_image(layer_name, array, channel=channel)
         else:
-            return array
+            return self._post_process_outputs(array, return_type)
 
-    def propagate_each(self,
-               inputs=None,
-               targets=None,
+    def propagate_each(
+        self,
+        inputs=None,
+        targets=None,
     ):
         """
         Update all of the watchers whatever they may be watching.
@@ -1016,8 +1102,6 @@ class Network:
                     count += 1
 
     def _build_predict_models(self):
-        from tensorflow.keras.models import Model
-
         # for all layers, inputs to here:
         for layer in self._layers:
             if self._get_layer_type(layer.name) != "input":
@@ -1032,7 +1116,8 @@ class Network:
             else:
                 self._input_layer_names[layer.name] = tuple([layer.name])
                 self._predict_models[tuple([layer.name]), layer.name] = Model(
-                    inputs=[layer.input], outputs=[layer.output],
+                    inputs=[layer._input_tensor],
+                    outputs=[layer.output],
                 )
 
     def _get_input_tensors(self, layer_name, input_list):
@@ -1040,15 +1125,15 @@ class Network:
         Given a layer_name, return {input_layer_name: tensor}
         """
         # Recursive; results in input_list of [(name, tensor), ...]
-        for layer in self.incoming_layers(layer_name):
+        for layer in self._get_layers_to(layer_name):
             if layer.name in self._input_layer_names:
                 for layer_name in self._input_layer_names[layer.name]:
                     if layer_name not in [name for (name, tensor) in input_list]:
-                        input_list.append((layer_name, self[layer_name].input))
+                        input_list.append((layer_name, self[layer_name]._input_tensor))
             else:
                 if self._get_layer_type(layer.name) == "input":
                     if layer.name not in [name for (name, tensor) in input_list]:
-                        input_list.append((layer.name, layer.input))
+                        input_list.append((layer.name, layer._input_tensor))
                 else:
                     self._get_input_tensors(layer.name, input_list)
         return input_list
@@ -1058,8 +1143,6 @@ class Network:
         Given an activation name (or function), and an output vector, display
         make and return an image widget.
         """
-        import tensorflow.keras.backend as K
-
         image = self._layer_array_to_image(layer_name, vector)
         # If rotated, and has features, rotate it:
         if self.config.get("rotate", False):
@@ -1072,7 +1155,6 @@ class Network:
         return image
 
     def _layer_has_channels(self, layer_name):
-        layer = self[layer_name]
         class_name = self[layer_name].__class__.__name__
         return class_name in ["Conv2D", "MaxPooling2D"]
 
@@ -1080,10 +1162,13 @@ class Network:
         if self._layer_has_channels(layer_name):
             if channel is None:
                 channel = self._get_feature(layer_name)
-            select = tuple([slice(None) for i in range(len(vector.shape) - 1)] + [slice(channel, channel+1)])
+            select = tuple(
+                [slice(None) for i in range(len(vector.shape) - 1)]
+                + [slice(channel, channel + 1)]
+            )
             vector = vector[select]
         else:
-            pass # let's try it as is
+            pass  # let's try it as is
 
         # If vshape is given, then resize the vector:
         vshape = self.vshape(layer_name)
@@ -1091,12 +1176,41 @@ class Network:
             vector = vector.reshape(vshape)
 
         try:
-            image = array_to_image(vector, minmax=self._layer_minmax(layer_name))
+            minmax = self._get_dynamic_minmax(layer_name, vector)
+            image = array_to_image(vector, minmax=minmax)
         except Exception:
             # Error: make a red image
             image = array_to_image([[[255, 0, 0]], [[255, 0, 0]]])
 
         return image
+
+    def _get_dynamic_minmax(self, layer_name, vector):
+        if self[layer_name].__class__.__name__ == "Dense":
+            # Get minmax based on activation function
+            minmax = self._get_act_minmax(layer_name)
+        elif self[layer_name].__class__.__name__ == "Flatten":
+            # Get minmax from previous layer
+            inputs_to_layer_name = self._get_layers_to(layer_name)
+            minmax = self._get_dynamic_minmax(inputs_to_layer_name[0].name, vector)
+        elif self[layer_name].__class__.__name__ == "InputLayer":
+            # Hardcoded to typical ranges
+            minimum = vector.min()
+            maximum = vector.max()
+            if minimum < 0:
+                minmax = [-1, 1]
+            elif maximum > 100 and maximum <= 255:
+                # Assuming image
+                minmax = [0, 255]
+            else:
+                minmax = [0, 1]
+        else:
+            # Compute minmax based on mean +/- std
+            avg = vector.mean()
+            std = vector.std()
+            minimum = vector.min()
+            maximum = vector.max()
+            minmax = [max(avg - std, minimum), min(avg + std, maximum)]
+        return minmax
 
     def _make_color(self, item):
         if isinstance(item, numbers.Number):
@@ -1105,14 +1219,24 @@ class Network:
             return tuple(item)
 
     def _get_input_layers(self):
-        return tuple(
-            [x.name for x in self._layers if self._get_layer_type(x.name) == "input"]
-        )
+        layers = []
+        for layer_from, layer_to in self._connections:
+            if layer_from not in layers:
+                layers.append(layer_from)
+        for layer_from, layer_to in self._connections:
+            if layer_to in layers:
+                layers.remove(layer_to)
+        return [self._layers_map[name] for name in layers]
 
     def _get_output_layers(self):
-        return tuple(
-            [x.name for x in self._layers if self._get_layer_type(x.name) == "output"]
-        )
+        layers = []
+        for layer_from, layer_to in self._connections:
+            if layer_to not in layers:
+                layers.append(layer_to)
+        for layer_from, layer_to in self._connections:
+            if layer_from in layers:
+                layers.remove(layer_from)
+        return [self._layers_map[name] for name in layers]
 
     def vshape(self, layer_name):
         """
@@ -1128,21 +1252,38 @@ class Network:
 
     def _get_output_shape(self, layer_name):
         layer = self[layer_name]
-        if isinstance(layer.output_shape, list):
-            return layer.output_shape[0][1:]
+        if (layer._build_shapes_dict is not None) and (
+            "input_shape" in layer._build_shapes_dict
+        ):
+            output_shape = layer.compute_output_shape(
+                layer._build_shapes_dict["input_shape"]
+            )
         else:
-            return layer.output_shape[1:]
+            output_shape = layer.batch_shape
+        if isinstance(output_shape, list):
+            return output_shape[0][1:]
+        else:
+            return output_shape[1:]
 
     def _get_input_shape(self, layer_name):
         layer = self[layer_name]
-        if isinstance(layer.input_shape, list):
-            return layer.input_shape[0][1:]
+        input_shape = layer._build_shapes_dict["input_shape"]
+        if isinstance(input_shape, list):
+            return input_shape[0][1:]
         else:
-            return layer.input_shape[1:]
+            return input_shape[1:]
 
     def _get_raw_output_shape(self, layer_name):
         layer = self[layer_name]
-        return layer.output_shape
+        if (layer._build_shapes_dict is not None) and (
+            "input_shape" in layer._build_shapes_dict
+        ):
+            output_shape = layer.compute_output_shape(
+                layer._build_shapes_dict["input_shape"]
+            )
+        else:
+            output_shape = layer.batch_shape
+        return output_shape
 
     def _get_feature(self, layer_name):
         """
@@ -1191,10 +1332,14 @@ class Network:
         if activation:
             retval += "\nAct function: %s" % activation
             retval += "\nAct output range: %s" % (
-                format_range(self._get_act_minmax(layer_name),)
+                format_range(
+                    self._get_act_minmax(layer_name),
+                )
             )
         retval += "\nActual minmax: %s" % (
-            format_range(self._layer_minmax(layer_name),)
+            format_range(
+                self._layer_minmax(layer_name),
+            )
         )
         retval += "\nShape = %s" % (self._get_raw_output_shape(layer_name),)
         return retval
@@ -1235,24 +1380,17 @@ class Network:
         Note: +/- 2 represents infinity
         """
         layer = self[layer_name]
-        if layer.__class__.__name__ == "Flatten":
-            in_layer = self.incoming_layers(layer_name)[0]
-            return self._get_act_minmax(in_layer.name)
-        elif self._get_layer_type(layer_name) == "input":
-            color, mini, maxi = self._get_colormap(layer)
-            return (mini, maxi)
-        else:  # try to get from activation function
-            activation = self._get_activation_name(layer)
-            if activation in ["tanh", "softsign"]:
-                return (-1, +1)
-            elif activation in ["sigmoid", "softmax", "hard_sigmoid"]:
-                return (0, +1)
-            elif activation in ["relu", "elu", "softplus"]:
-                return (0, +2)
-            elif activation in ["selu", "linear"]:
-                return (-2, +2)
-            else:  # default, or unknown activation function
-                return (-2, +2)
+        activation = self._get_activation_name(layer)
+        if activation in ["tanh", "softsign"]:
+            return (-1, +1)
+        elif activation in ["sigmoid", "softmax", "hard_sigmoid"]:
+            return (0, +1)
+        elif activation in ["relu", "elu", "softplus"]:
+            return (0, +2)
+        elif activation in ["selu", "linear"]:
+            return (-2, +2)
+        else:  # default, or unknown activation function
+            return (0, +2)
 
     def _get_border_color(self, layer_name):
         if (
@@ -1324,7 +1462,7 @@ class Network:
         return data
 
     def enumerate_dataset(self, dataset1, dataset2=None):
-        """"
+        """ "
         Takes a dataset and turns it into individual
         sets of one pattern each.
         """
@@ -1359,15 +1497,14 @@ class Network:
 
             count += 1
 
-    def input_to_dataset(self, input):
+    def _prepare_dataset_inputs(self, inputs):
         """
-        Take input tensor(s) and turn into an appropriate
-        dataset.
+        Take input dataset and make sure it is correct format.
         """
         if len(self.input_bank_order) == 1:
-            inputs = [np.array([input])]
+            inputs = np.array(inputs)
         else:
-            inputs = [np.array([bank]) for bank in input]
+            inputs = [np.array(bank) for bank in inputs]
         return inputs
 
     def target_to_dataset(self, target):
@@ -1378,16 +1515,20 @@ class Network:
             targets = [np.array([bank]) for bank in target]
         return targets
 
-    def to_svg(self, inputs=None, targets=None, mode="activation", colors=None, sizes=None):
-        """
-        """
+    def to_svg(
+        self, inputs=None, targets=None, mode="activation", colors=None, sizes=None
+    ):
+        """ """
+        # FIXME:
         # First, turn single patterns into a dataset:
-        if inputs is not None:
-            if mode == "activation":
-                inputs = self.input_to_dataset(inputs)
-        if targets is not None:
-            if mode == "activation":
-                targets = self.target_to_dataset(targets)
+        # if inputs is not None:
+        #    if mode == "activation":
+        #        inputs = self._extract_inputs(inputs, self.input_bank_order)
+        #
+        # if targets is not None:
+        #    if mode == "activation":
+        #        # FIXME:
+        #        targets = self.target_to_dataset(targets)
         # Next, build the structures:
         struct = self.build_struct(inputs, targets, mode, colors, sizes)
         templates = get_templates(self.config)
@@ -1408,9 +1549,12 @@ class Network:
                 if template_name == "label_svg" and rotate:
                     dict["x"] += 8
                     dict["text_anchor"] = "middle"
-                    dict["transform"] = (
-                        """ transform="rotate(-90 %s %s) translate(%s)" """
-                        % (dict["x"], dict["y"], 2)
+                    dict[
+                        "transform"
+                    ] = """ transform="rotate(-90 %s %s) translate(%s)" """ % (
+                        dict["x"],
+                        dict["y"],
+                        2,
                     )
                 else:
                     dict["transform"] = ""
@@ -1580,7 +1724,7 @@ class Network:
                     continue
                 elif anchor:
                     continue
-                for out in self.outgoing_layers(layer_name):
+                for out in self._get_layers_from(layer_name):
                     if (
                         out.name not in positioning
                     ):  # is it drawn yet? if not, continue,
@@ -1761,7 +1905,7 @@ class Network:
                     x1 = cwidth + width / 2
                 y1 = cheight - 1
                 # Arrows going up
-                for out in self.outgoing_layers(layer_name):
+                for out in self._get_layers_from(layer_name):
                     if out.name not in positioning:
                         continue
                     # draw an arrow between layers:
@@ -1842,7 +1986,7 @@ class Network:
                     ]
                 )
                 output_shape = self._get_output_shape(layer_name)
-                if (self._layer_has_channels(layer_name)):
+                if self._layer_has_channels(layer_name):
                     features = str(output_shape[-1])
                     # FIXME:
                     feature = str(self._get_feature(layer_name))
@@ -1924,7 +2068,7 @@ class Network:
         # DONE!
         # Draw the title:
         if mode == "activation":
-            title = "Activations for %s"  % self.config["name"]
+            title = "Activations for %s" % self.config["name"]
         elif mode == "pca":
             title = "PCAs for %s" % self.config["name"]
         elif mode == "histogram":
@@ -2009,35 +2153,14 @@ class Network:
         )
         return struct
 
-    def incoming_layers(self, layer_name):
-        layer = self[layer_name]
-        layers = []
-        for node in layer.inbound_nodes:
-            if hasattr(node.inbound_layers, "__iter__"):
-                for layer in node.inbound_layers:
-                    if layer not in layers:
-                        layers.append(layer)
-            else:
-                if node.inbound_layers not in layers:
-                    layers.append(node.inbound_layers)
-        return layers
-
-    def outgoing_layers(self, layer_name):
-        layer = self[layer_name]
-        layers = []
-        for node in layer.outbound_nodes:
-            if node.outbound_layer not in layers:
-                layers.append(node.outbound_layer)
-        return layers
-
     def _get_layer_type(self, layer_name):
         """
         Determines whether a layer is a "input", "hidden", or "output"
         layer based on its connections. If no connections, then it is
         "unconnected".
         """
-        incoming_connections = self.incoming_layers(layer_name)
-        outgoing_connections = self.outgoing_layers(layer_name)
+        incoming_connections = self._get_layers_to(layer_name)
+        outgoing_connections = self._get_layers_from(layer_name)
         if len(incoming_connections) == 0 and len(outgoing_connections) == 0:
             return "unconnected"
         elif len(incoming_connections) > 0 and len(outgoing_connections) > 0:
@@ -2048,8 +2171,7 @@ class Network:
             return "input"
 
     def _get_layer_class(self, layer_name):
-        """
-        """
+        """ """
         layer = self[layer_name]
         return layer.__class__.__name__
 
@@ -2066,7 +2188,7 @@ class Network:
         levels = {}
         for layer in self._layers:
             level = max(
-                [levels[lay.name] for lay in self.incoming_layers(layer.name)] + [-1]
+                [levels[lay.name] for lay in self._get_layers_to(layer.name)] + [-1]
             )
             levels[layer.name] = level + 1
         max_level = max(levels.values())
@@ -2077,7 +2199,7 @@ class Network:
             ]
             ordering.append(
                 [
-                    (name, False, [x.name for x in self.incoming_layers(name)])
+                    (name, False, [x.name for x in self._get_layers_to(name)])
                     for name in layer_names
                 ]
             )  # (going_to/layer_name, anchor, coming_from)
@@ -2115,7 +2237,7 @@ class Network:
                 else:
                     # if next level doesn't contain an outgoing
                     # connection, add it to next level as anchor point
-                    for layer in self.outgoing_layers(name):
+                    for layer in self._get_layers_from(name):
                         next_level = [
                             (n, anchor) for (n, anchor, fname) in ordering[level + 1]
                         ]
@@ -2127,8 +2249,8 @@ class Network:
         return ordering
 
     def _optimize_ordering(self, ordering):
-        def perms(l):
-            return list(itertools.permutations(l))
+        def perms(items):
+            return list(itertools.permutations(items))
 
         def distance(xy1, xy2):
             return math.sqrt((xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2)
@@ -2230,7 +2352,7 @@ class Network:
         if inputs is None:
             inputs = self.make_dummy_dataset()
         if targets is not None:
-            outputs = self._model(inputs, training=False).numpy()
+            outputs = self.propagate(inputs)
             if len(self.output_bank_order) == 1:
                 targets = [targets]
                 errors = (np.array(outputs) - np.array(targets)).tolist()
@@ -2269,37 +2391,41 @@ class Network:
                     continue
                 hiding[column] = False
                 # The rest of this for loop is handling image of bank
-                keep_aspect_ratio = None
                 if mode == "pca":
                     image = self.predict_pca_to(inputs, layer_name, colors, sizes)
-                    keep_aspect_ratio = True
                 elif mode == "histogram":
                     image = self.predict_histogram_to(inputs, layer_name)
-                    keep_aspect_ratio = True
-                else: # activations of a dataset
+                else:  # activations of a dataset
                     try:
-                        image = self.make_image(
-                            layer_name, self.predict_to(inputs, layer_name)[0]
-                        )
+                        outputs = self.propagate_to(inputs, layer_name)
+                        image = self.make_image(layer_name, outputs)
                     except Exception:
                         # Error: make a red image
-                        image = array_to_image([[
-                            [255, 0, 0],
-                            [255, 0, 0],
-                        ]])
+                        image = array_to_image(
+                            [
+                                [
+                                    [255, 0, 0],
+                                    [255, 0, 0],
+                                ]
+                            ]
+                        )
                 (width, height) = image.size
                 images[layer_name] = image  # little image
                 if self._get_layer_type(layer_name) == "output":
                     if targets is not None:
                         # Target image, targets set above:
-                        target_colormap = ("grey", -2, 2)  # FIXME: self[layer_name].colormap
+                        target_colormap = (
+                            "grey",
+                            -2,
+                            2,
+                        )  # FIXME: self[layer_name].colormap
                         target_bank = targets[self.output_bank_order.index(layer_name)]
                         target_array = np.array(target_bank)
                         target_image = self.make_image(
                             layer_name, target_array, target_colormap
                         )
                         # Error image, error set above:
-                        error_colormap = (get_error_colormap(), -2, 2) # FIXME
+                        error_colormap = (get_error_colormap(), -2, 2)  # FIXME
                         error_bank = errors[self.output_bank_order.index(layer_name)]
                         error_array = np.array(error_bank)
                         error_image = self.make_image(
@@ -2335,7 +2461,6 @@ class Network:
             max_width = max(max_width, row_width)  # of all rows
         return max_width, max_height, row_heights, images, image_dims
 
-
     def make_dummy_dataset(self):
         """
         Make a stand-in dataset for this network:
@@ -2343,8 +2468,7 @@ class Network:
         inputs = []
         for layer_name in self.input_bank_order:
             shape = self._get_input_shape(layer_name)
-            if (shape is None) or (isinstance(shape, (list, tuple))
-                                   and None in shape):
+            if (shape is None) or (isinstance(shape, (list, tuple)) and None in shape):
                 v = np.random.rand(100)
             else:
                 v = np.random.rand(*shape)
@@ -2415,6 +2539,7 @@ class Network:
             "border_color": "string",
             "border_width": "integer",
         }
+
         def validate_type(value, format):
             if format == "integer":
                 return isinstance(value, int)
@@ -2425,7 +2550,7 @@ class Network:
             elif format == "boolean":
                 return isinstance(value, bool)
             else:
-                return all([validate_type(v,f) for v,f in zip(value, format)])
+                return all([validate_type(v, f) for v, f in zip(value, format)])
 
         if layer_name in self.config["layers"]:
             for item in items:
@@ -2433,7 +2558,10 @@ class Network:
                     if validate_type(items[item], proper_items[item]):
                         self.config["layers"][layer_name][item] = items[item]
                     else:
-                        raise AttributeError("invalid form for: %r; should be: %s" % (item, proper_items[item]))
+                        raise AttributeError(
+                            "invalid form for: %r; should be: %s"
+                            % (item, proper_items[item])
+                        )
                 else:
                     raise AttributeError("no such config layer item: %r" % item)
         else:
@@ -2477,7 +2605,7 @@ class Network:
                 new_weights = []
                 for item in orig:
                     total = functools.reduce(operator.mul, item.shape, 1)
-                    w = np.array(weights[current:current + total])
+                    w = np.array(weights[current : current + total])
                     new_weights.append(w.reshape(item.shape))
                     current += total
                 layer.set_weights(new_weights)
@@ -2503,23 +2631,30 @@ class Network:
             print("WARNING: you need to use an optimizer with lr")
 
     def get_metric(self, name):
-        import tensorflow.keras.backend as K
-
         if name == "tolerance_accuracy":
             self._state["tolerance_accuracy_used"] = True
+
             def tolerance_accuracy(targets, outputs):
                 return K.mean(
                     K.all(
-                        K.less_equal(K.abs(targets - outputs),
-                                     self._tolerance), axis=-1),
-                    axis=-1)
+                        K.less_equal(
+                            K.abs(
+                                tf.cast(targets, tf.float32)
+                                - tf.cast(outputs, tf.float32)
+                            ),
+                            self._tolerance,
+                        ),
+                        axis=-1,
+                    ),
+                    axis=-1,
+                )
+
             return tolerance_accuracy
         else:
             return name
 
     def get_momentum(self):
-        """
-        """
+        """ """
         if hasattr(self._model, "optimizer") and hasattr(
             self._model.optimizer, "momentum"
         ):
@@ -2528,8 +2663,7 @@ class Network:
             print("WARNING: you need to use an optimizer with momentum")
 
     def set_momentum(self, momentum):
-        """
-        """
+        """ """
         if hasattr(self._model, "optimizer") and hasattr(
             self._model.optimizer, "momentum"
         ):
@@ -2538,25 +2672,49 @@ class Network:
             print("WARNING: you need to use an optimizer with momentum")
 
     def get_tolerance(self):
-        """
-        """
+        """ """
         if not self._state["tolerance_accuracy_used"]:
-            print("WARNING: you need Network.compile(metrics=['tolerance_accuracy']) to use tolerance")
+            print(
+                "WARNING: you need Network.compile(metrics=['tolerance_accuracy']) to use tolerance"
+            )
         return self._tolerance
 
     def set_tolerance(self, tolerance):
-        """
-        """
+        """ """
         if not self._state["tolerance_accuracy_used"]:
-            print("WARNING: you need Network.compile(metrics=['tolerance_accuracy']) to use tolerance")
+            print(
+                "WARNING: you need Network.compile(metrics=['tolerance_accuracy']) to use tolerance"
+            )
         self._tolerance = tolerance
+
+    def find_path(self, from_layer, to_layer_name):
+        """
+        Breadth-first search to find shortest path
+        from from_layer to to_layer_name.
+
+        Returns None if there is no path.
+        """
+        # No need to put from_layer.name in path:
+        path = {}
+        path[from_layer.name] = []
+        queue = [from_layer]
+        while queue:
+            current = queue.pop()
+            if current.name == to_layer_name:
+                return path[current.name]
+            else:
+                # expand:
+                for layer in self._get_layers_from(current.name):
+                    path[layer.name] = path[current.name] + [layer.name]
+                    queue.append(layer)
+        return None
 
 
 class SimpleNetwork(Network):
     def __init__(
         self,
         *layers,
-        name="SimpleNetwork",
+        name="SequentialNetwork",
         activation="sigmoid",
         loss="mse",
         optimizer="sgd",
@@ -2584,9 +2742,6 @@ class SimpleNetwork(Network):
             * (int, int, ...): (input layers only) the shape of the input patterns
             * keras layer instance: an instance of a keras layer, like Flatten()
         """
-        from tensorflow.keras.models import Model
-        from tensorflow.keras.layers import Dense, Input, Layer
-        import tensorflow.keras.layers
 
         def make_name(index, total):
             if index == 0:
@@ -2601,15 +2756,18 @@ class SimpleNetwork(Network):
         def make_layer(index, layers, activation):
             if isinstance(layers[index], Layer) or is_keras_tensor(layers[index]):
                 return layers[index]
-            elif (isinstance(layers[index], str) and
-                  hasattr(tensorflow.keras.layers, layers[index])):
-                layer_class = getattr(tensorflow.keras.layers, layers[index])
+            elif isinstance(layers[index], str) and hasattr(
+                tf.keras.layers, layers[index]
+            ):
+                layer_class = getattr(tf.keras.layers, layers[index])
                 return layer_class()
             else:
                 name = make_name(index, len(layers))
                 if index == 0:
                     size = layers[index]
-                    return Input(size, name=name)
+                    if not isinstance(size, (list, tuple)):
+                        size = tuple([size])
+                    return InputLayer(size, name=name)
                 else:
                     size = layers[index]
                     if isinstance(size, int):
@@ -2617,28 +2775,23 @@ class SimpleNetwork(Network):
                     elif len(size) == 2 and isinstance(size[1], str):
                         size, activation_function = size
                     else:
-                        raise Exception("Invalid SimpleNetwork layer representation: %r" % size)
+                        raise Exception(
+                            "Invalid SquentialNetwork layer representation: %r" % size
+                        )
                     return Dense(size, activation=activation_function, name=name)
 
-        layers = [
-            make_layer(index, layers, activation)
-            for index in range(len(layers))
-        ]
-        current_layer = layers[0]
-        for layer in layers[1:]:
-            current_layer = layer(current_layer)
-        model = Model(inputs=layers[0], outputs=current_layer, name=name)
+        layers = [make_layer(index, layers, activation) for index in range(len(layers))]
+        super().__init__(layers=layers, name=name)
+        for i in range(len(layers) - 1):
+            self.connect(layers[i].name, layers[i + 1].name)
         if metrics is None:
             metrics = ["tolerance_accuracy"]
-        # Replaced special named metrics with ours:
-        super()._init_state()
         metrics = [self.get_metric(name) for name in metrics]
-        model.compile(optimizer=self._make_optimizer(optimizer), loss=loss, metrics=metrics)
-        super().__init__(model)
+        self.compile(
+            optimizer=self._make_optimizer(optimizer), loss=loss, metrics=metrics
+        )
 
     def _make_optimizer(self, optimizer):
-        import tensorflow as tf
-
         # Get optimizer with some defaults
         if optimizer == "sgd":
             return tf.keras.optimizers.SGD(
@@ -2653,3 +2806,6 @@ class SimpleNetwork(Network):
         weights, etc.
         """
         self._watchers[:] = []
+
+
+SequentialNetwork = SimpleNetwork

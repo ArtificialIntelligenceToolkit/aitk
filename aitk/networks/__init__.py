@@ -8,4 +8,6 @@
 #
 # ******************************************************
 
-from .network import Network, SimpleNetwork  # noqa: F401
+from tensorflow.keras.layers import *
+
+from .network import Network, SequentialNetwork, SimpleNetwork  # noqa: F401
