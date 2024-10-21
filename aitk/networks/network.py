@@ -1070,8 +1070,10 @@ class Network:
         array = model(input_vectors, training=False)
 
         if return_type == "image":
+            array = self._post_process_outputs(array, "numpy")
             return self._layer_array_to_image(layer_name, array, channel=channel)
         else:
+            # Here, return_type is "list" or "numpy"
             return self._post_process_outputs(array, return_type)
 
     def propagate_each(
