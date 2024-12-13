@@ -39,6 +39,34 @@ Topics covered include `Convolutional Neural Networks`.
 
 > In this essay, we do a deep-dive into the functioning of a Convolutional Neural Network that is designed for processing two-dimensional image data.
 
+
+## Generative AI
+
+#### [Word Embedding](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/WordEmbedding.ipynb)
+
+Topics covered include how `word embeddings` are learned.
+
+> This essay explores how a rich representation of a word's meaning can be inferred solely from its associations with other words. A stripped down language with just 27 words and a limited set of templates is examined. 
+
+#### [NanoGPT](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/NanoGPT.ipynb)
+
+Topics covered include `Large Language Models`
+
+> This essay demonstrates a small-scale LLM applied to all of Shakespeare's plays.
+
+#### [ImageGeneration](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/ImageGeneration.ipynb)
+
+Topics covered include `CLIP`, `Latent Diffusion`, `noising`, and `denoising`
+
+> This essay provides an overview of how image generation operates, and demonstrates noising and denoising of images. It also highlights some of the ethical concerns around image generation tools.
+
+#### [Transformer](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/Transformer.ipynb)
+
+Topics covered include `transformers` and `attention` within LLMs.
+
+> This essay goes into much more detail about how LLMs operate using the same NanoGPT model trained on the works of Shakespeare.
+
+
 ## Robotics
 
 #### [Braitenberg Vehicles](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/BraitenbergVehicles.ipynb)
@@ -72,29 +100,3 @@ Topics covered include Rodney Brooks' `subsumption architecture`
 
 > In 1986, MIT Roboticist Rodney Brooks proposed a real-time, reactive framework for controlling robots called the subsumption architecture, which is based on a hierarchical collection of layers. This notebook demonstrates an example of this framework applied to the task of a robot seeking light.
 
-
-## Generative AI
-
-#### [Word Embedding](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/WordEmbedding.ipynb)
-
-Topics covered include how `word embeddings` are learned.
-
-> This essay explores how a rich representation of a word's meaning can be inferred solely from its associations with other words. A stripped down language with just 27 words and a limited set of templates is examined. 
-
-#### [NanoGPT](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/NanoGPT.ipynb)
-
-Topics covered include `Large Language Models`
-
-> This essay demonstrates a small-scale LLM applied to all of Shakespeare's plays.
-
-#### [ImageGeneration](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/ImageGeneration.ipynb)
-
-Topics covered include `CLIP`, `Latent Diffusion`, `noising`, and `denoising`
-
-> This essay provides an overview of how image generation operates, and demonstrates noising and denoising of images. It also highlights some of the ethical concerns around image generation tools.
-
-#### [Transformer](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/Transformer.ipynb)
-
-Topics covered include `transformers` and `attention` within LLMs.
-
-> This essay goes into much more detail about how LLMs operate using the same NanoGPT model trained on the works of Shakespeare.
