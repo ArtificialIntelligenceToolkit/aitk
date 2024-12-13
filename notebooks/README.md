@@ -22,18 +22,6 @@ If you have never used a notebook before, please review our notebook **[Intro To
 >**[Structure of Convolutional Neural Networks](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/StructureOfConvolutionalNeuralNetworks.ipynb)**
 
 
-### Robotics:
-#### Begin with:
->**[What is it like to be a robot?](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/WhatIsItLikeToBeARobot.ipynb)**
-#### Next:
->**[Braitenberg Vehicles](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/BraitenbergVehicles.ipynb)**
->
->**[Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/SeekLight.ipynb)**
->
->**[Demo Robots](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/DemoRobots.ipynb)**
-#### Further:
->**[Subsumption](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/Subsumption.ipynb)**
->
 
 ### Generative AI
 If you have not already done so, review the **[Basic Neural Nets](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/BasicNeuralNets.ipynb)** notebook 
@@ -49,3 +37,16 @@ and **[Analyzing Hidden Representations](https://github.com/ArtificialIntelligen
 
 #### Further:
 >**[Transformer](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/GenerativeAI/Transformer.ipynb)**
+
+### Robotics:
+#### Begin with:
+>**[What is it like to be a robot?](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/WhatIsItLikeToBeARobot.ipynb)**
+#### Next:
+>**[Braitenberg Vehicles](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/BraitenbergVehicles.ipynb)**
+>
+>**[Seek Light](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/SeekLight.ipynb)**
+>
+>**[Demo Robots](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/DemoRobots.ipynb)**
+#### Further:
+>**[Subsumption](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/Robotics/Subsumption.ipynb)**
+>
