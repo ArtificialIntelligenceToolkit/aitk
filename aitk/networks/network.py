@@ -1260,8 +1260,11 @@ class Network:
             output_shape = layer.compute_output_shape(
                 layer._build_shapes_dict["input_shape"]
             )
-        else:
+        elif hasattr(layer, "batch_shape"):
             output_shape = layer.batch_shape
+        else:
+            output_shape = layer.output.shape
+
         if isinstance(output_shape, list):
             return output_shape[0][1:]
         else:
@@ -1283,8 +1286,10 @@ class Network:
             output_shape = layer.compute_output_shape(
                 layer._build_shapes_dict["input_shape"]
             )
-        else:
+        elif hasattr(layer, "batch_shape"):
             output_shape = layer.batch_shape
+        else:
+            output_shape = layer.output.shape
         return output_shape
 
     def _get_feature(self, layer_name):
