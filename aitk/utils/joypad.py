@@ -9,7 +9,7 @@
 # ***********************************************************
 
 try:
-    from ipywidgets import GridspecLayout, Button, Layout
+    from ipywidgets import GridspecLayout, Button, Layout, VBox
 except ImportError:
     pass
 
@@ -45,6 +45,7 @@ class JoyPad():
             [(0.0, -1.), (0.0, 0.0), (0.0, 1.0)],
             [(-1., -1.), (-1., 0.0), (-1., 1.0)],
         ]
+        self.last_movement = (0, 0)
         self.grid = GridspecLayout(3, 3, width=self.width, height=self.height)
         for row in range(3):
             for col in range(3):
@@ -61,17 +62,32 @@ class JoyPad():
                 self.grid[row, col] = Button(description=self.arrows[row][col], layout=layout, style=style)
                 self.grid[row, col].on_click(lambda button, row=row, col=col: self.control(row, col))
 
+        self.continue_button = Button(description="Continue", layout={'width': self.width, 'height': "50px", "padding": "5px"}, style=style)
+        self.continue_button.on_click(self.continue_motion)
+        self.widget = VBox(
+            children=[
+                self.grid,
+                self.continue_button,
+            ]
+        )
+                                     
+    def continue_motion(self, button):
+        translate, rotate = self.last_movement
+        self.function(
+            translate * self.scale[0],
+            rotate * self.scale[1],
+        )
+
     def control(self, row, col):
-        movement = self.movement[row][col]
-        if movement is not None:
-            translate, rotate = movement
-            self.function(
-                translate * self.scale[0],
-                rotate * self.scale[1],
-            )
+        self.last_movement = self.movement[row][col]
+        translate, rotate = self.last_movement
+        self.function(
+            translate * self.scale[0],
+            rotate * self.scale[1],
+        )
 
     def watch(self):
-        display(self.grid)
+        display(self.widget)
 
     def get_widget(self):
-        return self.grid
+        return self.widget
