@@ -977,7 +977,7 @@ class World:
         self._walls.append(wall)
         self._complexity = self._compute_complexity()
         self._grid.update_wall(wall)
-        self.update()  # request draw
+        self.draw()
 
     def del_robot(self, robot):
         """

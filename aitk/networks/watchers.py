@@ -162,8 +162,8 @@ class NetworkWatcher():
         # Watched items get a border
         # Need width and height; we get it out of svg:
         header = svg.split("\n")[0]
-        width = int(re.match('.*width="(\d*)px"', header).groups()[0])
-        height = int(re.match('.*height="(\d*)px"', header).groups()[0])
+        width = int(re.match(r'.*width="(\d*)px"', header).groups()[0])
+        height = int(re.match(r'.*height="(\d*)px"', header).groups()[0])
         div = """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;">%s</div>""" % (width, height, svg)
         self._widget.value = div
 
@@ -192,8 +192,8 @@ class NetworkWatcher():
         # Watched items get a border
         # Need width and height; we get it out of svg:
         header = svg.split("\n")[0]
-        width = int(re.match('.*width="(\d*)px"', header).groups()[0])
-        height = int(re.match('.*height="(\d*)px"', header).groups()[0])
+        width = int(re.match(r'.*width="(\d*)px"', header).groups()[0])
+        height = int(re.match(r'.*height="(\d*)px"', header).groups()[0])
         div = """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;">%s</div>""" % (width, height, svg)
 
         if self._widget is None:

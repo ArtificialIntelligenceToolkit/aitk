@@ -119,6 +119,20 @@ class Robot:
         self._initialize()
         self.from_json(config)
 
+    def get_distances(self, *positions, scaled=False):
+        if len(positions) == 0:
+            positions = []
+            for p in range(len(self)):
+                if self[p].__class__.__name__ == "RangeSensor":
+                    positions.append(p)
+        if scaled:
+            return [self[p].get_distance() / self[p].get_max() for p in positions]
+        else:
+            return [self[p].get_distance() for p in positions]
+
+    def get_readings(self, *positions):
+        return [self[p].get_reading() for p in positions]
+
     def __getitem__(self, item):
         if isinstance(item, int):
             return self._devices[item]

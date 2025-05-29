@@ -42,7 +42,7 @@ class JoyPad():
         ]
         self.movement = [
             [(1.0, -1.), (1.0, 0.0), (1.0, 1.0)],
-            [(0.0, -1.), None,       (0.0, 1.0)],
+            [(0.0, -1.), (0.0, 0.0), (0.0, 1.0)],
             [(-1., -1.), (-1., 0.0), (-1., 1.0)],
         ]
         self.grid = GridspecLayout(3, 3, width=self.width, height=self.height)
