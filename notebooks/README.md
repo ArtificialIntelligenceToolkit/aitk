@@ -9,6 +9,8 @@ If you have never used a notebook before, please review our notebook **[Intro To
 
 ### Understanding Neural Networks 
 #### Begin with:
+>**[Neuron Simulation](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/NeuronSimulation.ipynb)**
+
 >**[Basic Neural Nets](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/BasicNeuralNets.ipynb)**
 
 #### Next:
