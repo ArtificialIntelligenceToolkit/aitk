@@ -8,6 +8,12 @@ If you have never used a Jupyter notebook before, we recommend beginning with th
 
 ## Neural Networks 
 
+#### [Neuron Simulation](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/NeuronSimulation.ipynb)
+
+Topics covered include `how artificial neurons work`.
+
+> This essay explores all of the elements that affect a neuron's activation level, or how it responds to incoming data. These elements include its current inputs, weighted connections, and activation function. 
+
 #### [Basic Neural Nets](https://github.com/ArtificialIntelligenceToolkit/aitk/blob/master/notebooks/NeuralNetworks/BasicNeuralNets.ipynb)
 
 Topics covered include an `introduction to neural networks` and `machine learning`.
