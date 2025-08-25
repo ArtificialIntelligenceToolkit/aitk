@@ -73,7 +73,7 @@ def dashboard(
     # Define step button click handler
     def step_click(button: Button) -> None:
         """Handle step button click by executing robot movement."""
-        move(world, robot, steering.value, power.value, seconds.value)
+        move(world, robot, data, steering.value, power.value, seconds.value)
 
     step.on_click(step_click)
     step.style.button_color = "lightblue"
