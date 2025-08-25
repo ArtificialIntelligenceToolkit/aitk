@@ -18,54 +18,15 @@ from ipywidgets import (
     Label,
     SliderStyle,
     Button,
-    Output,
 )
-from typing import List, Tuple, Any, Optional
-
-
-def move(
-    world: World, robot: Robot, steering: float, power: float, seconds: float
-) -> None:
-    """
-    Move the robot in the world based on steering and power inputs.
-
-    This function updates the robot's movement, records sensor data and control inputs
-    to the global data list, and advances the world simulation.
-
-    Args:
-        world: The simulation world containing the robot
-        robot: The robot to control
-        steering: Steering control value between -1 (left) and 1 (right)
-        power: Power/throttle control value between 0 (stop) and 1 (full speed)
-        seconds: Duration of the movement step in seconds
-
-    Note:
-        The function records sensor readings and control inputs at 10Hz (every 0.1 seconds)
-        during the movement period. The robot's velocity is displayed as debug output.
-    """
-    translate = power
-    rotate = steering
-
-    # Record sensor data and control inputs at 10Hz during movement
-    for i in range(int(seconds * 10)):
-        # Get distances from all range sensors on the robot
-        sensor_distances = robot.get_distances(scaled=True)
-        control_inputs = (translate, -rotate)
-        data.append((sensor_distances, control_inputs))
-
-    # Move the robot with the specified controls
-    robot.move(translate, -rotate)
-
-    # Advance the world simulation
-    with Output():
-        world.seconds(seconds, real_time=False)
-
-    # Display current velocity as debug output
-    robot.speak("T: %.02f, R: %.02f" % robot.get_velocity())
+from typing import List, Tuple, Callable
 
 
 def dashboard(
-    world: World, robot: Robot, data: List[Tuple[List[float], Tuple[float, float]]]
+    world: World,
+    robot: Robot,
+    data: List[Tuple[List[float], Tuple[float, float]]],
+    move: Callable,
 ) -> VBox:
     """
     Create an interactive dashboard widget for controlling a robot in a world.
