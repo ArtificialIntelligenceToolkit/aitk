@@ -38,6 +38,9 @@ def dashboard(
         world: The simulation world containing the robot
         robot: The robot to control
         data: The list to store movement history
+        move: A callable that executes robot movement. Should have the signature
+            move(world, robot, steering, power, seconds), where it updates the robot's
+            state in the world according to the given steering, power, and time step.
 
     Returns:
         VBox: A Jupyter widget containing the control interface and world display
