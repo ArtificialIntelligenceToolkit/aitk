@@ -47,7 +47,7 @@ def dashboard(
 
     The dashboard includes:
         - Steering wheel slider (-1 to 1)
-        - Gas/power slider (0 to 1)
+        - Gas/power slider (-1 to 1)
         - Step button to execute movement
         - Seconds per step slider (0.1 to 5.0)
         - Visual world display widget
@@ -94,7 +94,7 @@ def dashboard(
     # Create power control slider
     power = FloatSlider(
         description="Gas:",
-        min=0,
+        min=-1,
         max=1,
         value=0,
         layout=Layout(width="400px"),
