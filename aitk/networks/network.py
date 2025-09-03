@@ -2670,7 +2670,7 @@ class Network:
         if hasattr(self._model, "optimizer") and hasattr(
             self._model.optimizer, "momentum"
         ):
-            return float(self._model.optimizer.momentum.numpy())
+            return self._model.optimizer.momentum
         else:
             print("WARNING: you need to use an optimizer with momentum")
 
