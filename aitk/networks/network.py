@@ -2638,7 +2638,7 @@ class Network:
         if hasattr(self._model, "optimizer") and hasattr(
             self._model.optimizer, "learning_rate"
         ):
-            return float(network._model.optimizer.learning_rate.value)
+            return float(self._model.optimizer.learning_rate.value)
         else:
             print("WARNING: you need to use an optimizer with lr")
 
