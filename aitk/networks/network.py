@@ -1541,7 +1541,7 @@ class Network:
         templates = get_templates(self.config)
         # get the header:
         svg = None
-        for (template_name, dict) in struct:
+        for template_name, dict in struct:
             if template_name == "head_svg":
                 dict["background_color"] = self.config["background_color"]
                 svg = templates["head_svg"].format(**dict)
@@ -1556,12 +1556,13 @@ class Network:
                 if template_name == "label_svg" and rotate:
                     dict["x"] += 8
                     dict["text_anchor"] = "middle"
-                    dict[
-                        "transform"
-                    ] = """ transform="rotate(-90 %s %s) translate(%s)" """ % (
-                        dict["x"],
-                        dict["y"],
-                        2,
+                    dict["transform"] = (
+                        """ transform="rotate(-90 %s %s) translate(%s)" """
+                        % (
+                            dict["x"],
+                            dict["y"],
+                            2,
+                        )
                     )
                 else:
                     dict["transform"] = ""
@@ -1600,7 +1601,7 @@ class Network:
             spacing = self._find_spacing(0, ordering, max_width)
             # draw the row of targets:
             cwidth = 0
-            for (layer_name, anchor, fname) in ordering[0]:  # no anchors in output
+            for layer_name, anchor, fname in ordering[0]:  # no anchors in output
                 if layer_name + "_targets" not in images:
                     continue
                 image = images[layer_name + "_targets"]
@@ -1649,7 +1650,7 @@ class Network:
             spacing = self._find_spacing(0, ordering, max_width)
             # draw the row of errores:
             cwidth = 0
-            for (layer_name, anchor, fname) in ordering[0]:  # no anchors in output
+            for layer_name, anchor, fname in ordering[0]:  # no anchors in output
                 if layer_name + "_errors" not in images:
                     continue
                 image = images[layer_name + "_errors"]
@@ -1726,7 +1727,7 @@ class Network:
             cwidth = 0
             # See if there are any connections up:
             any_connections_up = False
-            for (layer_name, anchor, fname) in level_tups:
+            for layer_name, anchor, fname in level_tups:
                 if not self._get_visible(layer_name):
                     continue
                 elif anchor:
@@ -2214,7 +2215,7 @@ class Network:
         for level in range(len(ordering)):  # input to output
             tuples = ordering[level]
             index = 0
-            for (name, anchor, none) in tuples[:]:
+            for name, anchor, none in tuples[:]:
                 if self._get_layer_type(name) == "output":
                     # move it to last row
                     # find it and remove
@@ -2226,7 +2227,7 @@ class Network:
         # order_cache = {}
         for level in range(len(ordering)):  # input to output
             tuples = ordering[level]
-            for (name, anchor, fname) in tuples:
+            for name, anchor, fname in tuples:
                 if anchor:
                     # is this in next? if not add it
                     next_level = [
@@ -2623,17 +2624,21 @@ class Network:
         """
         Sometimes called `epsilon`.
         """
-        if hasattr(self._model, "optimizer") and hasattr(self._model.optimizer, "lr"):
-            self._model.optimizer.lr = learning_rate
+        if hasattr(self._model, "optimizer") and hasattr(
+            self._model.optimizer, "learning_rate"
+        ):
+            self._model.optimizer.learning_rate = float(learning_rate)
         else:
-            print("WARNING: you need to use an optimizer with lr")
+            print("WARNING: you need to use an optimizer with learning_rate")
 
     def get_learning_rate(self):
         """
         Sometimes called `epsilon`.
         """
-        if hasattr(self._model, "optimizer") and hasattr(self._model.optimizer, "lr"):
-            return self._model.optimizer.lr.numpy()
+        if hasattr(self._model, "optimizer") and hasattr(
+            self._model.optimizer, "learning_rate"
+        ):
+            return float(network._model.optimizer.learning_rate.value)
         else:
             print("WARNING: you need to use an optimizer with lr")
 
@@ -2665,7 +2670,7 @@ class Network:
         if hasattr(self._model, "optimizer") and hasattr(
             self._model.optimizer, "momentum"
         ):
-            return self._model.optimizer.momentum.numpy()
+            return float(self._model.optimizer.momentum.numpy())
         else:
             print("WARNING: you need to use an optimizer with momentum")
 
@@ -2674,7 +2679,7 @@ class Network:
         if hasattr(self._model, "optimizer") and hasattr(
             self._model.optimizer, "momentum"
         ):
-            self._model.optimizer.momentum = momentum
+            self._model.optimizer.momentum = float(momentum)
         else:
             print("WARNING: you need to use an optimizer with momentum")
 
