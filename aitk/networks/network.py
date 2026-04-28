@@ -9,6 +9,7 @@
 # ******************************************************
 
 import functools
+import warnings
 import html
 import io
 import itertools
@@ -605,7 +606,11 @@ class Network:
 
         input_vectors = self._prepare_input(inputs, self.input_bank_order)
         try:
-            outputs = self._model(input_vectors, training=False)
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", "The structure of `inputs` doesn't match"
+                )
+                outputs = self._model(input_vectors, training=False)
         except Exception:
             input_layers_shapes = [
                 self._get_raw_output_shape(layer_name)
@@ -815,7 +820,11 @@ class Network:
         model = self._predict_models[input_names, layer_name]
         inputs = self._prepare_dataset_inputs(inputs)
         try:
-            outputs = model(inputs, training=False)
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore", "The structure of `inputs` doesn't match"
+                )
+                outputs = model(inputs, training=False)
         except Exception:
             input_layers_shapes = [
                 self._get_raw_output_shape(layer_name) for layer_name in input_names
@@ -1003,7 +1012,9 @@ class Network:
         else:
             watcher = self._watchers[names.index(name)]
 
-        display(watcher._widget)
+        from .watchers import HTMLWidgetWithFallback
+
+        display(HTMLWidgetWithFallback(watcher._widget))
 
     def watch_layer(self, layer_name):
         """ """
@@ -1017,7 +1028,9 @@ class Network:
         else:
             watcher = self._watchers[names.index(name)]
 
-        display(watcher._widget)
+        from .watchers import HTMLWidgetWithFallback
+
+        display(HTMLWidgetWithFallback(watcher._widget))
 
     def watch(
         self,
@@ -1038,7 +1051,9 @@ class Network:
         else:
             watcher = self._watchers[names.index(name)]
             widget = watcher.get_widget(show_error, show_targets, rotate, scale)
-        display(widget)
+        from .watchers import HTMLWidgetWithFallback
+
+        display(HTMLWidgetWithFallback(widget))
 
     def predict(
         self,
@@ -1054,7 +1069,9 @@ class Network:
             for watcher in self._watchers:
                 watcher.update(inputs, targets)
         inputs = self._prepare_dataset_inputs(inputs)
-        outputs = self._model(inputs, training=False)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", "The structure of `inputs` doesn't match")
+            outputs = self._model(inputs, training=False)
         return outputs
 
     def propagate_to(
@@ -1067,7 +1084,9 @@ class Network:
         input_names = self._input_layer_names[layer_name]
         model = self._predict_models[input_names, layer_name]
         input_vectors = self._prepare_input(inputs, input_names)
-        array = model(input_vectors, training=False)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", "The structure of `inputs` doesn't match")
+            array = model(input_vectors, training=False)
 
         if return_type == "image":
             array = self._post_process_outputs(array, "numpy")
@@ -1548,7 +1567,7 @@ class Network:
                 break
         # build the rest:
         for index in range(len(struct)):
-            (template_name, dict) = struct[index]
+            template_name, dict = struct[index]
             # From config:
             dict["class_id"] = self.config["class_id"]
             if template_name != "head_svg" and not template_name.startswith("_"):
@@ -1605,7 +1624,7 @@ class Network:
                 if layer_name + "_targets" not in images:
                     continue
                 image = images[layer_name + "_targets"]
-                (width, height) = image_dims[layer_name]
+                width, height = image_dims[layer_name]
                 cwidth += spacing - width / 2
                 struct.append(
                     [
@@ -1654,7 +1673,7 @@ class Network:
                 if layer_name + "_errors" not in images:
                     continue
                 image = images[layer_name + "_errors"]
-                (width, height) = image_dims[layer_name]
+                width, height = image_dims[layer_name]
                 cwidth += spacing - (width / 2)
                 struct.append(
                     [
@@ -1749,7 +1768,7 @@ class Network:
             row_height = 0  # for row of images
             # Draw each column:
             for column in range(len(level_tups)):
-                (layer_name, anchor, fname) = level_tups[column]
+                layer_name, anchor, fname = level_tups[column]
                 if not self._get_visible(layer_name):
                     if not hiding.get(
                         column, False
@@ -1892,7 +1911,7 @@ class Network:
                 else:
                     # Bank positioning
                     image = images[layer_name]
-                    (width, height) = image_dims[layer_name]
+                    width, height = image_dims[layer_name]
                     cwidth += spacing - (width / 2)
                     positioning[layer_name] = {
                         "name": layer_name
@@ -2378,7 +2397,7 @@ class Network:
             row_height = 0  # for this row
             # For each column:
             for column in range(len(level_tups)):
-                (layer_name, anchor, fname) = level_tups[column]
+                layer_name, anchor, fname = level_tups[column]
                 if not self._get_visible(layer_name):
                     if not hiding.get(column, False):
                         row_height = max(
@@ -2417,7 +2436,7 @@ class Network:
                                 ]
                             ]
                         )
-                (width, height) = image.size
+                width, height = image.size
                 images[layer_name] = image  # little image
                 if self._get_layer_type(layer_name) == "output":
                     if targets is not None:

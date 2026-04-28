@@ -33,6 +33,7 @@ from .utils import (
 
 from aitk.utils import Color
 
+
 class Robot:
     """
     The Robot class is the base class for all robots.
@@ -59,6 +60,7 @@ class Robot:
     world.add_robot(robot2)
     ```
     """
+
     def __init__(
         self,
         x=0,
@@ -105,7 +107,7 @@ class Robot:
         config = {
             "x": x,
             "y": y,
-            "a": a, # degrees in the config file
+            "a": a,  # degrees in the config file
             "color": color,
             "name": name,
             "do_trace": do_trace,
@@ -244,13 +246,34 @@ class Robot:
             config (dict): a config dict
         """
         DEVICES = importlib.import_module("aitk.robots.devices")
-        valid_keys = set([
-            "name", "state", "do_trace", "va", "vx", "vy",
-            "tva", "tvx", "tvy", "x", "y", "a", "va_max",
-            "vx_max", "vy_max", "va_ramp", "vx_ramp", "vy_ramp",
-            "image_data", "height", "color", "max_trace_length",
-            "body", "devices",
-        ])
+        valid_keys = set(
+            [
+                "name",
+                "state",
+                "do_trace",
+                "va",
+                "vx",
+                "vy",
+                "tva",
+                "tvx",
+                "tvy",
+                "x",
+                "y",
+                "a",
+                "va_max",
+                "vx_max",
+                "vy_max",
+                "va_ramp",
+                "vx_ramp",
+                "vy_ramp",
+                "image_data",
+                "height",
+                "color",
+                "max_trace_length",
+                "body",
+                "devices",
+            ]
+        )
         config_keys = set(list(config.keys()))
         extra_keys = config_keys - valid_keys
 
@@ -377,14 +400,14 @@ class Robot:
             size = size if size is not None else 100
             show_robot = show_robot if show_robot is not None else True
             attributes = attributes if attributes is not None else "all"
-            self._watcher = RobotWatcher(self, size=size,
-                                         show_robot=show_robot,
-                                         attributes=attributes)
+            self._watcher = RobotWatcher(
+                self, size=size, show_robot=show_robot, attributes=attributes
+            )
             self.world._watchers.append(self._watcher)
         else:
-            self._watcher.set_arguments(size=size,
-                                        show_robot=show_robot,
-                                        attributes=attributes)
+            self._watcher.set_arguments(
+                size=size, show_robot=show_robot, attributes=attributes
+            )
             self._watcher.draw()
 
         return self._watcher.get_widget()
@@ -403,7 +426,15 @@ class Robot:
             show_robot=show_robot,
             attributes=attributes,
         )
-        display(widget)
+        from .watchers import WidgetWithFallback
+
+        png_bytes = None
+        if self._watcher and hasattr(self._watcher, "image"):
+            png_bytes = self._watcher.image.value
+        if png_bytes:
+            display(WidgetWithFallback(widget, png_bytes))
+        else:
+            display(widget)
 
     def get_image(self, size=100):
         """
@@ -413,18 +444,12 @@ class Robot:
             size (int): size in pixels around robot
         """
         picture = self.world.get_image()
-        start_x = round(
-            max(self.x * self.world.scale - size / 2, 0)
-        )
-        start_y = round(
-            max(self.y * self.world.scale - size / 2, 0)
-        )
+        start_x = round(max(self.x * self.world.scale - size / 2, 0))
+        start_y = round(max(self.y * self.world.scale - size / 2, 0))
         rectangle = (
             start_x,
             start_y,
-            min(
-                start_x + size, self.world.width * self.world.scale
-            ),
+            min(start_x + size, self.world.width * self.world.scale),
             min(
                 start_y + size,
                 self.world.height * self.world.scale,
@@ -468,11 +493,12 @@ class Robot:
         else:
             self.color = color
         self.trace_color = Color(
-            self.color.red * 0.75, self.color.green * 0.75, self.color.blue * 0.75,
+            self.color.red * 0.75,
+            self.color.green * 0.75,
+            self.color.blue * 0.75,
         )
 
-    def set_pose(self, x=None, y=None, a=None, clear_trace=True,
-                 show=True):
+    def set_pose(self, x=None, y=None, a=None, clear_trace=True, show=True):
         """
         Set the pose of the robot. a is in degrees.
 
@@ -582,8 +608,15 @@ class Robot:
         else:
             raise Exception("Can't add the same device to a robot more than once.")
 
-    def add_device_ring(self, device_class, distance_from_center,
-                        start_degree, stop_degree, count, **kwargs):
+    def add_device_ring(
+        self,
+        device_class,
+        distance_from_center,
+        start_degree,
+        stop_degree,
+        count,
+        **kwargs
+    ):
         """
         Adds a ring of devices at a given distance from the center of
         the robot.
@@ -760,7 +793,9 @@ class Robot:
         if 0 <= translate <= 1:
             self.tvx = round(-translate * self.vx_max, 1)
         else:
-            print("backward value is out of range; should be between 0 and 1, inclusive")
+            print(
+                "backward value is out of range; should be between 0 and 1, inclusive"
+            )
 
     def reverse(self):
         """
@@ -850,8 +885,9 @@ class Robot:
         self.pen = (Color(color), radius)
         if self.world is not None:
             if self.world._ground_image is None:
-                image = Image.new("RGBA", (self.world.width, self.world.height),
-                                  color="white")
+                image = Image.new(
+                    "RGBA", (self.world.width, self.world.height), color="white"
+                )
                 filename = "ground_image.png"
                 image.save(filename)
                 self.world.set_ground_image(filename)
@@ -1038,14 +1074,8 @@ class Robot:
         offset = PI_OVER_2
         # proposed positions:
         pa = self.a - va * time_step
-        tvx = (
-            vx * math.sin(-pa + offset)
-            + vy * math.cos(-pa + offset) * time_step
-        )
-        tvy = (
-            vx * math.cos(-pa + offset)
-            - vy * math.sin(-pa + offset) * time_step
-        )
+        tvx = vx * math.sin(-pa + offset) + vy * math.cos(-pa + offset) * time_step
+        tvy = vx * math.cos(-pa + offset) - vy * math.sin(-pa + offset) * time_step
         px = self.x + tvx
         py = self.y + tvy
 
@@ -1248,7 +1278,7 @@ class Robot:
                 data = self.trace[-max_trace_length:]
 
             # None indicates a segment break
-            if all(data): # no segments
+            if all(data):  # no segments
                 segments = [[(point[0], point[1]) for (point, direction) in data]]
             else:
                 segments = []
@@ -1268,7 +1298,6 @@ class Robot:
                     segment,
                     stroke_style=self.trace_color,
                 )
-
 
             self.trace = data
 
@@ -1399,6 +1428,7 @@ SCRIBBLER_CONFIG = {
     ],
 }
 
+
 class Scribbler(Robot):
     def __init__(
         self,
@@ -1415,7 +1445,7 @@ class Scribbler(Robot):
         config = {
             "x": x,
             "y": y,
-            "a": a, # degrees in config file
+            "a": a,  # degrees in config file
             "color": color,
             "name": name,
             "do_trace": do_trace,
@@ -1446,9 +1476,10 @@ VEHICLE_CONFIG = {
         ["rectangle", "black", [-6, -3.25 - 1.5, 2.75, 1.5]],
         ["rectangle", "black", [-6, 3.25, 2.75, 1.5]],
         ["line", "black", [5, 3, 8, 3]],
-        ["line", "black", [5,-3, 8,-3]],
+        ["line", "black", [5, -3, 8, -3]],
     ],
 }
+
 
 class Vehicle(Robot):
     def __init__(
@@ -1466,7 +1497,7 @@ class Vehicle(Robot):
         config = {
             "x": x,
             "y": y,
-            "a": a, # degrees in config file
+            "a": a,  # degrees in config file
             "color": color,
             "name": name,
             "do_trace": do_trace,

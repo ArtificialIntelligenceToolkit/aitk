@@ -35,6 +35,24 @@ from .world import World
 
 from aitk.utils import progress_bar
 
+
+class WidgetWithFallback:
+    """Wraps a widget with a static image/png fallback for non-interactive renderers."""
+
+    def __init__(self, widget, png_bytes):
+        self._widget = widget
+        self._png_bytes = png_bytes
+
+    def _repr_mimebundle_(self, **kwargs):
+        import base64
+
+        bundle = {}
+        if hasattr(self._widget, "_repr_mimebundle_"):
+            bundle.update(self._widget._repr_mimebundle_(**kwargs) or {})
+        bundle["image/png"] = base64.b64encode(self._png_bytes).decode("ascii")
+        return bundle
+
+
 def make_attr_widget(obj, map, title, attrs, labels):
     box = VBox()
     children = []
@@ -95,7 +113,15 @@ class Watcher:
         """
         self._inject_css()
         widget = self.get_widget(**kwargs)
-        display(widget)
+        png_bytes = None
+        if hasattr(self, "image") and hasattr(self.image, "value"):
+            png_bytes = self.image.value
+        elif hasattr(self, "widget") and hasattr(self.widget, "value"):
+            png_bytes = self.widget.value
+        if png_bytes:
+            display(WidgetWithFallback(widget, png_bytes))
+        else:
+            display(widget)
 
     def get_widget(self, **kwargs):
         self._inject_css()
@@ -126,11 +152,15 @@ class RobotWatcher(Watcher):
             "Rotate vel:",
             "State:",
         ]
-        widget = make_attr_widget(self.robot, self.map, None, self.all_attrs, self.labels)
-        self.image = Image(layout=Layout(
-            width="-webkit-fill-available",
-            height="auto",
-        ))
+        widget = make_attr_widget(
+            self.robot, self.map, None, self.all_attrs, self.labels
+        )
+        self.image = Image(
+            layout=Layout(
+                width="-webkit-fill-available",
+                height="auto",
+            )
+        )
         self.image.add_class("pixelated")
         if not self.show_robot:
             self.image.layout.display = "none"
@@ -247,11 +277,7 @@ class CameraWatcher(Watcher):
         if "width" not in kwargs:
             kwargs["width"] = "500px"
 
-        self.widget = Image(
-            layout=Layout(
-                **kwargs
-            )
-        )
+        self.widget = Image(layout=Layout(**kwargs))
         self.widget.layout.border = "10px solid rgb(0 177 255)"
         self.widget.add_class("pixelated")
         # Update and draw:
@@ -369,8 +395,12 @@ class Recorder(Watcher):
         ]
         retval = []
         min_dim = min(self.world.width, self.world.height) / 2
-        for point,a in points:
-            if len(retval) == 0 or distance(retval[-1][0].x, retval[-1][0].y, point.x, point.y) < min_dim:
+        for point, a in points:
+            if (
+                len(retval) == 0
+                or distance(retval[-1][0].x, retval[-1][0].y, point.x, point.y)
+                < min_dim
+            ):
                 retval.append((point, a))
             else:
                 retval.extend([None, (point, a)])
@@ -411,11 +441,11 @@ class Recorder(Watcher):
                     self.world.robots[i].trace = self.get_trace(
                         i, index, self.world.robots[i].max_trace_length
                     )
-            if time >= self.last_time: # forward in time
+            if time >= self.last_time:  # forward in time
                 events = self.get_events(self.last_time, time)
                 for event in events:
                     self.apply_event(event, forward=True)
-            else: # backward
+            else:  # backward
                 events = reversed(self.get_events(time, self.last_time))
                 for event in events:
                     self.apply_event(event, forward=False)
@@ -429,13 +459,17 @@ class Recorder(Watcher):
         return picture
 
     def get_events(self, start_time, stop_time):
-        if (len(self.orig_world._events) > 0 and
-            (stop_time == self.orig_world._events[-1][0])):
+        if len(self.orig_world._events) > 0 and (
+            stop_time == self.orig_world._events[-1][0]
+        ):
             # On the very last step, show things that happened
             # after the beginning of step:
             stop_time += 0.1
-        return [event for event in self.orig_world._events
-                if start_time <= event[0] < stop_time]
+        return [
+            event
+            for event in self.orig_world._events
+            if start_time <= event[0] < stop_time
+        ]
 
     def apply_event(self, event, forward=True):
         # (time, "food-off", robot_index, food_index)
@@ -546,8 +580,7 @@ class Player(VBox):
         self.length = length
         self.output = Output()
         self.position_text = FloatText(value=0.0)
-        self.total_text = Label(
-            value="of %s" % round(self.length * 0.1, 1))
+        self.total_text = Label(value="of %s" % round(self.length * 0.1, 1))
         controls = self.make_controls()
         super().__init__([controls, self.output])
 
@@ -599,12 +632,12 @@ class Player(VBox):
             [
                 button_begin,
                 button_prev,
-                #self.position_text,
+                # self.position_text,
                 button_next,
                 button_end,
                 self.button_play,
             ],
-            layout=self.button_layout
+            layout=self.button_layout,
         )
         self.control_slider = FloatSlider(
             description=self.title,

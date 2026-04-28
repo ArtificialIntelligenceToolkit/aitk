@@ -16,7 +16,23 @@ from .utils import (
     image_to_uri,
 )
 
-class WeightWatcher():
+
+class HTMLWidgetWithFallback:
+    """Wraps an ipywidgets.HTML with a text/html fallback for non-interactive renderers."""
+
+    def __init__(self, widget):
+        self._widget = widget
+        self._html = widget.value
+
+    def _repr_mimebundle_(self, **kwargs):
+        bundle = {}
+        if hasattr(self._widget, "_repr_mimebundle_"):
+            bundle.update(self._widget._repr_mimebundle_(**kwargs) or {})
+        bundle["text/html"] = self._html
+        return bundle
+
+
+class WeightWatcher:
     def __init__(self, network, to_name):
         self.network = network
         self.to_name = to_name
@@ -29,18 +45,18 @@ class WeightWatcher():
     def array_to_image(self, vector):
         from PIL import Image, ImageDraw
 
-        size = 1 # self.config.get("pixels_per_unit", 1)
+        size = 1  # self.config.get("pixels_per_unit", 1)
         new_width = vector.shape[0] * size  # in, pixels
         new_height = vector.shape[1] * size  # in, pixels
 
-        #try:
+        # try:
         #    cm_hot = cm.get_cmap(color)
-        #except Exception:
+        # except Exception:
         cm_hot = cm.get_cmap("gray")
 
         vector = cm_hot(vector)
         vector = np.uint8(vector * 255)
-        if max(vector.shape) <= 20: # self.config["max_draw_units"]:
+        if max(vector.shape) <= 20:  # self.config["max_draw_units"]:
             # Need to make it bigger, to draw circles:
             # Make this value too small, and borders are blocky;
             # too big and borders are too thin
@@ -70,13 +86,16 @@ class WeightWatcher():
         return image
 
     def update(self, *args, **kwargs):
-        weights = self.to_layer.get_weights() # matrix, bias
+        weights = self.to_layer.get_weights()  # matrix, bias
         # if len() == 2, weights and then biases
         # weights.shape = (incoming units, outgoing units)
-        image = self.array_to_image(weights[0]) # weights
+        image = self.array_to_image(weights[0])  # weights
         image_uri = image_to_uri(image)
         width, height = image.size
-        div = """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;"><image src="%s"></image></div>""" % (width, height, image_uri)
+        div = (
+            """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;"><image src="%s"></image></div>"""
+            % (width, height, image_uri)
+        )
         self._widget.value = div
 
     def get_widget(self):
@@ -89,7 +108,8 @@ class WeightWatcher():
 
         return self._widget
 
-class LayerWatcher():
+
+class LayerWatcher:
     def __init__(self, network, layer_name):
         self.name = "LayerWatcher: %s" % (layer_name)
         self.network = network
@@ -111,7 +131,10 @@ class LayerWatcher():
         )
         image_uri = image_to_uri(image)
         width, height = image.size
-        div = """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;"><image src="%s"></image></div>""" % (width, height, image_uri)
+        div = (
+            """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;"><image src="%s"></image></div>"""
+            % (width, height, image_uri)
+        )
         self._widget.value = div
 
     def get_widget(self):
@@ -120,23 +143,28 @@ class LayerWatcher():
         if self._widget is None:
             self._widget = HTML()
             image = self.network.make_image(
-                self.layer_name, np.array(self.network.make_dummy_vector(self.layer_name)),
+                self.layer_name,
+                np.array(self.network.make_dummy_vector(self.layer_name)),
             )
             image_uri = image_to_uri(image)
             width, height = image.size
-            div = """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;"><image src="%s"></image></div>""" % (width, height, image_uri)
+            div = (
+                """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;"><image src="%s"></image></div>"""
+                % (width, height, image_uri)
+            )
             self._widget.value = div
 
         return self._widget
 
 
-class NetworkWatcher():
-    def __init__(self,
-                 network,
-                 show_error=None,
-                 show_targets=None,
-                 rotate=None,
-                 scale=None,
+class NetworkWatcher:
+    def __init__(
+        self,
+        network,
+        show_error=None,
+        show_targets=None,
+        rotate=None,
+        scale=None,
     ):
         self.name = "NetworkWatcher"
         self.network = network
@@ -157,24 +185,29 @@ class NetworkWatcher():
         if inputs is None and targets is None:
             return
 
-        svg = self.network.get_image(inputs, targets, return_type="svg", **self._widget_kwargs)
+        svg = self.network.get_image(
+            inputs, targets, return_type="svg", **self._widget_kwargs
+        )
 
         # Watched items get a border
         # Need width and height; we get it out of svg:
         header = svg.split("\n")[0]
         width = int(re.match(r'.*width="(\d*)px"', header).groups()[0])
         height = int(re.match(r'.*height="(\d*)px"', header).groups()[0])
-        div = """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;">%s</div>""" % (width, height, svg)
+        div = (
+            """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;">%s</div>"""
+            % (width, height, svg)
+        )
         self._widget.value = div
 
-    def get_widget(self,
+    def get_widget(
+        self,
         show_error=None,
         show_targets=None,
         rotate=None,
         scale=None,
     ):
-        """
-        """
+        """ """
         from ipywidgets import HTML
 
         # Update the defaults:
@@ -194,7 +227,10 @@ class NetworkWatcher():
         header = svg.split("\n")[0]
         width = int(re.match(r'.*width="(\d*)px"', header).groups()[0])
         height = int(re.match(r'.*height="(\d*)px"', header).groups()[0])
-        div = """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;">%s</div>""" % (width, height, svg)
+        div = (
+            """<div style="outline: 5px solid #1976D2FF; width: %spx; height: %spx;">%s</div>"""
+            % (width, height, svg)
+        )
 
         if self._widget is None:
             # Singleton:

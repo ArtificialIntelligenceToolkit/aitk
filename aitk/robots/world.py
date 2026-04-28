@@ -51,8 +51,10 @@ try:
     from IPython.display import display, clear_output
 except ImportError:
     display = print
+
     def clear_output(wait=True):
         pass
+
 
 DEFAULT_HANDLER = signal.getsignal(signal.SIGINT)
 
@@ -75,7 +77,12 @@ class Wall:
         self.wtype = wtype
 
     def __repr__(self):
-        return "Wall(%r, %r, %r, wtype=%r)" % (self.color, self.robot, self.lines, self.wtype)
+        return "Wall(%r, %r, %r, wtype=%r)" % (
+            self.color,
+            self.robot,
+            self.lines,
+            self.wtype,
+        )
 
 
 class List(Sequence):
@@ -129,6 +136,7 @@ class List(Sequence):
     def __repr__(self):
         return repr(self.list_object)
 
+
 class CanvasCall:
     def __init__(self, canvas, command):
         self.canvas = canvas
@@ -136,6 +144,7 @@ class CanvasCall:
 
     def __call__(self, *args, **kwargs):
         self.canvas.command_list.append((self.command, args, kwargs))
+
 
 class Canvas:
     def __init__(self, command_list):
@@ -147,6 +156,7 @@ class Canvas:
     def clear(self):
         self.command_list.clear()
 
+
 class World:
     """
     The aitk.robots simulator world. All simulations
@@ -155,10 +165,10 @@ class World:
 
     def __init__(
         self,
-        width=500, # type: int
+        width=500,  # type: int
         height=250,  # type: int
         seed=0,  # type: int
-        scale=3.0, # type: float
+        scale=3.0,  # type: float
         boundary_wall=True,  # type: bool
         boundary_wall_color="purple",  # type: str
         boundary_wall_width=1,  # type: int
@@ -266,7 +276,9 @@ class World:
             previous_color = kwargs["previous_color"]
             new_color = kwargs["new_color"]
             bulb_index = self._bulbs.index(bulb)
-            self._events.append((self.time, "bulb-color", bulb_index, previous_color, new_color))
+            self._events.append(
+                (self.time, "bulb-color", bulb_index, previous_color, new_color)
+            )
         elif etype == "bulb-off":
             bulb = kwargs["bulb"]
             bulb_index = self._bulbs.index(bulb)
@@ -277,8 +289,7 @@ class World:
             self._events.append((self.time, "beacon-off"))
         else:
             raise Exception("unknown event: %s" % etype)
-        self.update() # request draw
-
+        self.update()  # request draw
 
     def get_time(self):
         """
@@ -355,8 +366,10 @@ class World:
             print("  This world has no food.")
         else:
             for food in self._food:
-                print("  x: %s, y: %s, brightness: %s, state: %s" % (
-                    food.x, food.y, food.standard_deviation, food.state))
+                print(
+                    "  x: %s, y: %s, brightness: %s, state: %s"
+                    % (food.x, food.y, food.standard_deviation, food.state)
+                )
         print("-" * 25)
         print("Lights:")
         print("-" * 25)
@@ -364,12 +377,10 @@ class World:
             print("  This world has no lights.")
         else:
             for bulb in self._bulbs:
-                print("  x: %s, y: %s, brightness: %s, name: %r, color: %s" % (
-                    bulb.x,
-                    bulb.y,
-                    bulb.brightness,
-                    bulb.name,
-                    bulb.color))
+                print(
+                    "  x: %s, y: %s, brightness: %s, name: %r, color: %s"
+                    % (bulb.x, bulb.y, bulb.brightness, bulb.name, bulb.color)
+                )
         print("-" * 25)
         print("Beacon:")
         print("-" * 25)
@@ -617,10 +628,18 @@ class World:
             ## Not a box, but surround area with four boundaries:
             self._walls.extend(
                 [
-                    Wall(self.boundary_wall_color, None, Line(p1, p2), wtype="boundary"),
-                    Wall(self.boundary_wall_color, None, Line(p2, p3), wtype="boundary"),
-                    Wall(self.boundary_wall_color, None, Line(p3, p4), wtype="boundary"),
-                    Wall(self.boundary_wall_color, None, Line(p4, p1), wtype="boundary"),
+                    Wall(
+                        self.boundary_wall_color, None, Line(p1, p2), wtype="boundary"
+                    ),
+                    Wall(
+                        self.boundary_wall_color, None, Line(p2, p3), wtype="boundary"
+                    ),
+                    Wall(
+                        self.boundary_wall_color, None, Line(p3, p4), wtype="boundary"
+                    ),
+                    Wall(
+                        self.boundary_wall_color, None, Line(p4, p1), wtype="boundary"
+                    ),
                 ]
             )
             self._complexity = self._compute_complexity()
@@ -660,20 +679,34 @@ class World:
                     # Box:
                     w = {
                         "color": str(wall.color),
-                        "p1": {"x": wall.lines[0].p1.x, "y": wall.lines[0].p1.y,},
-                        "p2": {"x": wall.lines[2].p1.x, "y": wall.lines[2].p1.y,},
+                        "p1": {
+                            "x": wall.lines[0].p1.x,
+                            "y": wall.lines[0].p1.y,
+                        },
+                        "p2": {
+                            "x": wall.lines[2].p1.x,
+                            "y": wall.lines[2].p1.y,
+                        },
                         "wtype": "box",
                     }
                 elif len(wall.lines) == 1:
                     # Line:
                     w = {
                         "color": str(wall.color),
-                        "p1": {"x": wall.lines[0].p1.x, "y": wall.lines[0].p1.y,},
-                        "p2": {"x": wall.lines[0].p2.x, "y": wall.lines[0].p2.y,},
+                        "p1": {
+                            "x": wall.lines[0].p1.x,
+                            "y": wall.lines[0].p1.y,
+                        },
+                        "p2": {
+                            "x": wall.lines[0].p2.x,
+                            "y": wall.lines[0].p2.y,
+                        },
                         "wtype": "line",
                     }
                 else:
-                    raise Exception("invalid wall length; should be 1 or 4: %s" % len(wall.lines))
+                    raise Exception(
+                        "invalid wall length; should be 1 or 4: %s" % len(wall.lines)
+                    )
                 config["walls"].append(w)
 
         for bulb in self._bulbs:
@@ -851,7 +884,10 @@ class World:
         # Force draw:
         self.draw()
         widget = self.get_widget(width, height)
-        display(widget)
+        from .watchers import WidgetWithFallback
+
+        png_bytes = self._backend.to_image(format="png")
+        display(WidgetWithFallback(widget, png_bytes))
 
     def get_widget(self, width=None, height=None):
         """
@@ -971,9 +1007,7 @@ class World:
                 wtype=wtype,
             )
         else:
-            wall = Wall(
-                Color(color), None, Line(p1, p3), wtype="wall"
-            )
+            wall = Wall(Color(color), None, Line(p1, p3), wtype="wall")
         self._walls.append(wall)
         self._complexity = self._compute_complexity()
         self._grid.update_wall(wall)
@@ -1002,14 +1036,10 @@ class World:
         # Determine if robot is contained in a wall box
         # cast two rays in opposite directions
         maxRange = max(self.width, self.height)
-        hits1 = cast_ray(self, robot, x, y, 0, maxRange,
-                         ignore_robots=[robot])
-        hits2 = cast_ray(self, robot, x, y, math.pi, maxRange,
-                         ignore_robots=[robot])
+        hits1 = cast_ray(self, robot, x, y, 0, maxRange, ignore_robots=[robot])
+        hits2 = cast_ray(self, robot, x, y, math.pi, maxRange, ignore_robots=[robot])
         # if both hit part of same wall, then contained
-        return (len(hits1) > 0 and
-                len(hits2) > 0 and
-                hits1[-1].wall == hits2[-1].wall)
+        return len(hits1) > 0 and len(hits2) > 0 and hits1[-1].wall == hits2[-1].wall
 
     def _find_random_pose(self, robot):
         """
@@ -1035,7 +1065,9 @@ class World:
                     if wall.robot is not None:
                         continue
                     for line in wall.lines:
-                        dist, location = distance_point_to_line((px, py), line.p1, line.p2)
+                        dist, location = distance_point_to_line(
+                            (px, py), line.p1, line.p2
+                        )
                         if dist < robot.radius:
                             too_close = True
                             break
@@ -1153,17 +1185,26 @@ class World:
                     "real_time": real_time,
                     "show_progress": False,
                     "quiet": True,
-                    "background": False
+                    "background": False,
                 }
                 print("Starting world.run() in background. Use world.stop()")
                 self._thread = Thread(target=self.run, kwargs=kwargs)
                 self._thread.start()
             else:
-                print("The world is already running in the background. Use world.stop()")
+                print(
+                    "The world is already running in the background. Use world.stop()"
+                )
         else:
             return self.steps(
-                float("inf"), function, time_step, show, real_time,
-                show_progress, quiet, interrupt, callback
+                float("inf"),
+                function,
+                time_step,
+                show,
+                real_time,
+                show_progress,
+                quiet,
+                interrupt,
+                callback,
             )
 
     def seconds(
@@ -1200,8 +1241,17 @@ class World:
         """
         time_step = time_step if time_step is not None else self.time_step
         steps = round(seconds / time_step)
-        return self.steps(steps, function, time_step, show, real_time,
-                          show_progress, quiet, interrupt, callback)
+        return self.steps(
+            steps,
+            function,
+            time_step,
+            show,
+            real_time,
+            show_progress,
+            quiet,
+            interrupt,
+            callback,
+        )
 
     def steps(
         self,
@@ -1252,7 +1302,7 @@ class World:
             for step in progress_bar(
                 step_iter,
                 (show_progress and not quiet) or (show and in_colab()),
-                self._step_display
+                self._step_display,
             ):
                 if self._stop:
                     self.status = "stopped"
@@ -1262,7 +1312,9 @@ class World:
                 if function is not None:
                     if isinstance(function, (list, tuple)):
                         if len(function) < len(self._robots):
-                            print_once("WARNING: you have not provided a controller function for every robot")
+                            print_once(
+                                "WARNING: you have not provided a controller function for every robot"
+                            )
                         # Deterministically run robots round-robin:
                         stop_values = [
                             function[i](self._robots[i])
@@ -1384,7 +1436,11 @@ class World:
 
     def _get_light_sources(self, all=False):
         if all:
-            return [bulb for bulb in (self._bulbs + self._get_robot_bulbs()) if bulb.state == "on"]
+            return [
+                bulb
+                for bulb in (self._bulbs + self._get_robot_bulbs())
+                if bulb.state == "on"
+            ]
         else:
             return [bulb for bulb in self._bulbs if bulb.state == "on"]
 
@@ -1408,7 +1464,9 @@ class World:
 
             if len(self._food) > 0:
                 smell = self._grid.get_image()
-                smell = smell.resize((int(self.width * self.scale), int(self.height * self.scale)))
+                smell = smell.resize(
+                    (int(self.width * self.scale), int(self.height * self.scale))
+                )
                 self._backend.image.paste(smell, (0, 0), smell)
 
             ## Draw all bulbs in world:
@@ -1422,23 +1480,25 @@ class World:
                     # Cast rays once:
                     all_hits = []
                     for ray in range(bulb.rays):
-                        angle = ray/bulb.rays * TWO_PI
-                        hits = cast_ray(self, bulb.robot, x, y, -angle + PI_OVER_2, maxRange)
+                        angle = ray / bulb.rays * TWO_PI
+                        hits = cast_ray(
+                            self, bulb.robot, x, y, -angle + PI_OVER_2, maxRange
+                        )
                         all_hits.append(hits)
                     # Now draw the rings:
                     for i in range(bulb.draw_rings):
                         radius = (bulb.draw_rings - i) * 2
-                        ray_length = bulb.brightness/30 * radius
-                        color.alpha = (i + 1)/bulb.draw_rings * 255
+                        ray_length = bulb.brightness / 30 * radius
+                        color.alpha = (i + 1) / bulb.draw_rings * 255
                         self._backend.set_fill_style(color)
                         points = []
                         for ray in range(bulb.rays):
                             hits = all_hits[ray]
-                            ray_length = bulb.brightness/30 * radius
+                            ray_length = bulb.brightness / 30 * radius
                             if len(hits) > 0:
                                 if hits[-1].distance < ray_length:
                                     ray_length = hits[-1].distance
-                            angle = ray/bulb.rays * TWO_PI
+                            angle = ray / bulb.rays * TWO_PI
                             x2, y2 = rotate_around(x, y, ray_length, angle)
                             points.append((x2, y2))
                         self._backend.draw_polygon(points)
